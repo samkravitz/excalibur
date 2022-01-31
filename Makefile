@@ -5,6 +5,7 @@ SOURCE = src
 INCLUDE = include
 OBJ = \
 	bitboard.o \
+	util.o \
 
 LIST = $(addprefix $(BIN)/, $(OBJ))
 VPATH = $(SOURCE)
