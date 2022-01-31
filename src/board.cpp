@@ -11,7 +11,9 @@
 
 #include "board.h"
 
+#include <algorithm>
 #include <cstring>
+#include <vector>
 
 #include "constants.h"
 #include "util.h"
@@ -45,10 +47,22 @@ std::string Board::to_string() const
     char board[8][8];
     std::memset(board, '*', sizeof(board));
 
-    wpawns.iterate([&](int idx) {
-      auto const [rank, file] = Util::rank_file_from_square(Square(idx));
-      board[rank][file] = 'P';
+    const std::vector<Bitboard> bb_all = { wpawns, bpawns, wknights, bknights, wbishops, bbishops, wrooks, brooks, wqueens, bqueens, wking, bking };
+    const std::vector<char> chars = { 'P', 'p', 'N', 'n', 'B', 'b', 'R', 'r','Q', 'q', 'K', 'k' };
+
+    std::vector<std::tuple<Bitboard, char>> zipped;
+
+    std::transform(bb_all.begin(), bb_all.end(), chars.begin(), std::back_inserter(zipped), [](const auto &a, const auto &b) {
+        return std::make_tuple(a, b);
     });
+
+    for (const auto [bitboard, c] : zipped)
+    {
+        bitboard.iterate([&](int idx) {
+            auto const [rank, file] = Util::rank_file_from_square(Square(idx));
+            board[rank][file] = c;
+        });
+    }
 
     std::string res = "";
 
