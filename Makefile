@@ -6,6 +6,7 @@ INCLUDE = include
 OBJ = \
 	bitboard.o \
 	board.o \
+	movegen.o \
 	util.o \
 
 LIST = $(addprefix $(BIN)/, $(OBJ))
