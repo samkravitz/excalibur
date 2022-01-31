@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "types.h"
 
 class Bitboard
@@ -26,6 +28,7 @@ public:
     Bitboard(u64);
 
     void set(u64);
+    void iterate(std::function<void(int)>) const;
 private:
     u64 bitboard;
 };
