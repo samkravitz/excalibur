@@ -29,6 +29,15 @@ public:
 
     void set(u64);
     void iterate(std::function<void(int)>) const;
+
+    // overloads of bitwise operations on bitboards
+    inline Bitboard operator&(Bitboard const &other) const { return Bitboard(bitboard & other.bitboard); }
+    inline Bitboard operator|(Bitboard const &other) const { return Bitboard(bitboard | other.bitboard); }
+    inline Bitboard operator^(Bitboard const &other) const { return Bitboard(bitboard ^ other.bitboard); }
+
+    inline Bitboard &operator&=(Bitboard const &other) { bitboard &= other.bitboard; return *this; }
+    inline Bitboard &operator|=(Bitboard const &other) { bitboard |= other.bitboard; return *this; }
+    inline Bitboard &operator^=(Bitboard const &other) { bitboard ^= other.bitboard; return *this; }
 private:
     u64 bitboard;
 };
