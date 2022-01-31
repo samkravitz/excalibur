@@ -32,10 +32,14 @@ public:
     // get all pieces of a certain color and type
     inline Bitboard pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
 
+    inline Color mover() const { return to_move; }
+
     std::string to_string() const;
 private:
     Bitboard piece_bb[6];
     Bitboard color_bb[2];
+
+    Color to_move;
 
     void reset();
 };
