@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <string>
 #include <tuple>
 
 #include "types.h"
@@ -17,4 +18,5 @@
 namespace Util
 {
     std::tuple <int, int> rank_file_from_square(Square);
+    std::string to_algebraic(Square);
 }
