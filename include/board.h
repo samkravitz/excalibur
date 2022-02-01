@@ -17,23 +17,23 @@
 
 #include <string>
 
-#include "bitboard.h"
+#include "types.h"
 
 class Board
 {
 public:
     Board();
 
-    inline Bitboard pieces(Color c)               const { return color_bb[c]; }
-    inline Bitboard pieces(PieceType pt)          const { return piece_bb[pt]; }
-    inline Bitboard pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
+    inline u64 pieces(Color c)               const { return color_bb[c]; }
+    inline u64 pieces(PieceType pt)          const { return piece_bb[pt]; }
+    inline u64 pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
 
     inline Color mover() const { return to_move; }
 
     std::string to_string() const;
 private:
-    Bitboard piece_bb[6];
-    Bitboard color_bb[2];
+    u64 piece_bb[6];
+    u64 color_bb[2];
 
     Color to_move;
 
