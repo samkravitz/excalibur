@@ -25,25 +25,4 @@
 // bitset iterator defined in bitset_iter.h
 using bitset_iter = bitset::index_iterable<64, const std::bitset<64>, true>;
 
-class Bitboard
-{
-public:
-    Bitboard() = default;
-    Bitboard(u64);
-
-    void set(u64);
-
-    // provides access to bitset_iter api
-    inline bitset_iter indeces_set() { return bitset::indices_on(std::bitset<64>(bitboard)); }
-
-    // overloads of bitwise operations on bitboards
-    inline Bitboard operator&(Bitboard const &other) const { return Bitboard(bitboard & other.bitboard); }
-    inline Bitboard operator|(Bitboard const &other) const { return Bitboard(bitboard | other.bitboard); }
-    inline Bitboard operator^(Bitboard const &other) const { return Bitboard(bitboard ^ other.bitboard); }
-
-    inline Bitboard &operator&=(Bitboard const &other) { bitboard &= other.bitboard; return *this; }
-    inline Bitboard &operator|=(Bitboard const &other) { bitboard |= other.bitboard; return *this; }
-    inline Bitboard &operator^=(Bitboard const &other) { bitboard ^= other.bitboard; return *this; }
-private:
-    u64 bitboard;
-};
+bitset_iter indeces_set(u64);

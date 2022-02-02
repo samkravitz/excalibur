@@ -12,15 +12,4 @@
 
 #include "bitboard.h"
 
-#include <bit>
-
-Bitboard::Bitboard(u64 bitboard)
-    : bitboard(bitboard)
-{
-
-}
-
-void Bitboard::set(u64 bitboard)
-{
-    bitboard = bitboard;
-}
+bitset_iter indeces_set(u64 bitboard) { return bitset::indices_on(std::bitset<64>(bitboard)); }
