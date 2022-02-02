@@ -10,10 +10,15 @@
 
 #pragma once
 
+#include <string>
+
 #include "board.h"
 
 class Engine
 {
 public:
     Board board;
+
+    void parse_uci_moves(std::string const &);
+    void parse_uci_move(std::string const &);
 };
