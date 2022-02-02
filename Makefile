@@ -6,6 +6,7 @@ INCLUDE = include
 OBJ = \
 	bitboard.o \
 	board.o \
+	engine.o \
 	movegen.o \
 	uci.o \
 	util.o \
