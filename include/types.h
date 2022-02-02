@@ -76,6 +76,15 @@ enum Direction : int
     NORTHWEST,
 };
 
+enum PieceType : int
+{
+    PAWN,
+    BISHOP,
+    KNIGHT,
+    ROOK,
+    QUEEN,
+    KING,
+};
 
 enum MoveFlags : int
 {
