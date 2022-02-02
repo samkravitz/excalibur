@@ -12,4 +12,26 @@
 
 #pragma once
 
+#include <string>
+
+// Types of messages GUI can send to engine
+enum UciType
+{
+    UCI,
+    DEBUG,
+    ISREADY,
+    SETOPTION,
+    REGISTER,
+    UCINEWGAME,
+    POSITION,
+    GO,
+    STOP,
+    PONDERHIT,
+    QUIT,
+
+    UNKNOWN,
+};
+
 void uci();
+UciType decode_msg(std::string const &);
+void send_msg(std::string const &);

@@ -1,0 +1,6 @@
+uci
+isready
+ucinewgame
+position startpos
+go
+stop
