@@ -26,6 +26,22 @@ std::tuple <int, int> Util::rank_file_from_square(Square square)
 }
 
 /**
+ * @brief gets the square on the board given a rank and file
+ * @param rank rank of square [0, 8)
+ * @param file file of square [0, 8)
+ * @return Square corresponding to rank & file
+ * 
+ * this function is the inverse of rank_file_from_square
+ * 
+ * example invocation:
+ * auto square = square_from_rank_file(1, 3) => D2
+ */
+Square Util::square_from_rank_file(int rank, int file)
+{
+    return Square(rank * 8 + file);
+}
+
+/**
  * @brief gets the algebraic notation representation of a square
  * @param square board-index of square to turn to algebraic notation
  * @return the algebraic representation of the square
@@ -40,4 +56,21 @@ std::string Util::to_algebraic(Square square)
     res += file + 'a';
     res += std::to_string(rank + 1);
     return res;    
+}
+
+/**
+ * @brief gets the square given the algebraic notation
+ * @param square 2 character string of the algebraic notation
+ * @return Square corresponding to the algebraic notation
+ * 
+ * this function is the inverse of to_algebraic
+ * 
+ * example invocation:
+ * auto square = from_algebraic("e4") => E4
+ */
+Square Util::from_algebraic(std::string const &square)
+{
+    int file = square.at(0) - 'a';
+    int rank = square.at(1) - '1';
+    return square_from_rank_file(rank, file);
 }
