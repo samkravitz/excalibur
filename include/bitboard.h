@@ -27,6 +27,7 @@ using bitset_iter = bitset::index_iterable<64, const std::bitset<64>, true>;
 
 bitset_iter indeces_set(u64);
 
+void print_bitboard(u64);
 
 inline u64 operator&(u64 bitboard, Square square) { return bitboard & (1ull << square); }
 inline u64 operator|(u64 bitboard, Square square) { return bitboard | (1ull << square); }
