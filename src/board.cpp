@@ -42,6 +42,7 @@ void Board::reset()
     std::memcpy(board, Constants::BOARD_INIT, sizeof(board));
 
     to_move = WHITE;
+    captured_piece = NONE;
 }
 
 void Board::make_move(Move const &move)
@@ -81,6 +82,55 @@ void Board::make_move(Move const &move)
 
     // set the destination square on the color bitboard of the moved piece
     color_bb[mover()] |= to;
+
+    // switch the player to move
+    to_move = ~to_move;
+}
+
+void Board::undo_move(Move const &move)
+{
+    // square the piece was on before moving
+    Square old_square = move.from();
+    
+    // square the piece moved to
+    Square new_square = move.to();
+
+    // color of the piece that moved
+    Color moved_color = ~to_move;
+
+    // get the piece type on the new square
+    auto moved_piece = piece_on(new_square);
+
+    // make sure there is an actual piece on that square
+    assert(moved_piece != NONE);
+
+    board[old_square] = moved_piece;
+    board[new_square] = NONE;
+
+    // clear the square that the piece moved to
+    piece_bb[moved_piece] ^= new_square;
+
+    // clear the square that the piece moved to on the color bb
+    color_bb[moved_color] ^= new_square;
+
+    // set the square that the piece originally was on
+    piece_bb[moved_piece] |= old_square;
+
+    // set the square that the piece originally was on on the color bb
+    color_bb[moved_color] |= old_square;
+
+    if (move.flags() == CAPTURE)
+    {
+        assert(captured_piece != NONE);
+        board[new_square] = captured_piece;
+
+        // set the square that the captured piece was on
+        piece_bb[captured_piece] |= new_square;
+
+        // set the square that the captured piece was on color bb
+        color_bb[~moved_color] |= new_square;
+        captured_piece = NONE;
+    }
 
     // switch the player to move
     to_move = ~to_move;

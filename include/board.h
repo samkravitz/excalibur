@@ -37,12 +37,16 @@ public:
     inline PieceType piece_on(Square square) const { return board[square]; }
 
     void make_move(Move const &);
+    void undo_move(Move const &);
 
     std::string to_string() const;
 private:
     u64 piece_bb[6];
     u64 color_bb[2];
     PieceType board[64];
+
+    // type of the most recently captured piece (used for undo move)
+    PieceType captured_piece;
 
     Color to_move;
 
