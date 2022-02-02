@@ -19,7 +19,11 @@
 
 #include <functional>
 
+#include "bitset_iter.h"
 #include "types.h"
+
+// bitset iterator defined in bitset_iter.h
+using bitset_iter = bitset::index_iterable<64, const std::bitset<64>, true>;
 
 class Bitboard
 {
@@ -28,7 +32,9 @@ public:
     Bitboard(u64);
 
     void set(u64);
-    void iterate(std::function<void(int)>) const;
+
+    // provides access to bitset_iter api
+    inline bitset_iter indeces_set() { return bitset::indices_on(std::bitset<64>(bitboard)); }
 
     // overloads of bitwise operations on bitboards
     inline Bitboard operator&(Bitboard const &other) const { return Bitboard(bitboard & other.bitboard); }

@@ -67,12 +67,13 @@ std::string Board::to_string() const
         return std::make_tuple(a, b);
     });
 
-    for (const auto [bitboard, c] : zipped)
+    for (auto [bitboard, c] : zipped)
     {
-        bitboard.iterate([&](int idx) {
+        for (const auto &idx : bitboard.indeces_set())
+        {
             auto const [rank, file] = Util::rank_file_from_square(Square(idx));
             board[rank][file] = c;
-        });
+        }
     }
 
     std::string res = "";
