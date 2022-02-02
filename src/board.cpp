@@ -11,6 +11,7 @@
 #include "board.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <vector>
 
@@ -41,6 +42,48 @@ void Board::reset()
     std::memcpy(board, Constants::BOARD_INIT, sizeof(board));
 
     to_move = WHITE;
+}
+
+void Board::make_move(Move const &move)
+{
+    Square from = move.from();
+    Square to = move.to();
+
+    // get the piece type currently on the origin square
+    auto moved_piece = piece_on(from);
+
+    // make sure there is an actual piece on that square
+    assert(moved_piece != NONE);
+
+    if (move.flags() == CAPTURE)
+    {
+        // save type of piece on the captured square
+        captured_piece = piece_on(to);
+
+        // unset the captured square
+        piece_bb[captured_piece] ^= to;
+
+        // unset the captured square on the color bb
+        color_bb[~mover()] ^= to;
+    }
+
+    board[from] = NONE;
+    board[to] = moved_piece;
+
+    // clear the origin square on the bitboard of the moved piece
+    piece_bb[moved_piece] ^= from;
+
+    // clear the origin square on the color bitboard of the moved piece
+    color_bb[mover()] ^= from;
+
+    // set the destination square on the bitboard of the moved piece
+    piece_bb[moved_piece] |= to;
+
+    // set the destination square on the color bitboard of the moved piece
+    color_bb[mover()] |= to;
+
+    // switch the player to move
+    to_move = ~to_move;
 }
 
 std::string Board::to_string() const

@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "move.h"
 #include "types.h"
 class Board
 {
@@ -34,6 +35,8 @@ public:
 
     inline Color mover() const { return to_move; }
     inline PieceType piece_on(Square square) const { return board[square]; }
+
+    void make_move(Move const &);
 
     std::string to_string() const;
 private:
