@@ -10,10 +10,8 @@
 
 #include "board.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <vector>
 
 #include "bitboard.h"
 #include "constants.h"
@@ -138,47 +136,26 @@ void Board::undo_move(Move const &move)
 
 std::string Board::to_string() const
 {
-    char board[8][8];
-    std::memset(board, '*', sizeof(board));
-
-    const std::vector<u64> bb_all = { 
-        pieces(PAWN,   WHITE),
-        pieces(PAWN,   BLACK),
-        pieces(KNIGHT, WHITE),
-        pieces(KNIGHT, BLACK),
-        pieces(BISHOP, WHITE),
-        pieces(BISHOP, BLACK),
-        pieces(ROOK,   WHITE),
-        pieces(ROOK,   BLACK),
-        pieces(QUEEN,  WHITE),
-        pieces(QUEEN,  BLACK),
-        pieces(KING,   WHITE),
-        pieces(KING,   BLACK),
-    };
-    const std::vector<char> chars = { 'P', 'p', 'N', 'n', 'B', 'b', 'R', 'r','Q', 'q', 'K', 'k' };
-
-    std::vector<std::tuple<u64, char>> zipped;
-
-    std::transform(bb_all.begin(), bb_all.end(), chars.begin(), std::back_inserter(zipped), [](const auto &a, const auto &b) {
-        return std::make_tuple(a, b);
-    });
-
-    for (auto [bitboard, c] : zipped)
-    {
-        for (const auto &idx : indeces_set(bitboard))
-        {
-            auto const [rank, file] = Util::rank_file_from_square(Square(idx));
-            board[rank][file] = c;
-        }
-    }
-
     std::string res = "";
 
     for (int rank = RANK_8; rank >= RANK_1; --rank)
     {
         for (int file = FILE_A; file <= FILE_H; ++file)
         {
-            res += board[rank][file];
+            Square s = static_cast<Square>(rank * 8 + file);
+            PieceType type = board[s];
+            char c;
+            switch (type)
+            {
+                case PAWN:   c = color_bb[WHITE] & s ? 'P' : 'p'; break;
+                case KNIGHT: c = color_bb[WHITE] & s ? 'N' : 'n'; break;
+                case BISHOP: c = color_bb[WHITE] & s ? 'B' : 'b'; break;
+                case ROOK:   c = color_bb[WHITE] & s ? 'R' : 'r'; break;
+                case QUEEN:  c = color_bb[WHITE] & s ? 'Q' : 'q'; break;
+                case KING:   c = color_bb[WHITE] & s ? 'K' : 'k'; break;
+                default:     c = '*';
+            }
+            res += c;
             res += ' ';
         }
         res += '\n';
