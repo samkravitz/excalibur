@@ -33,11 +33,13 @@ public:
     inline u64 pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
 
     inline Color mover() const { return to_move; }
+    inline PieceType piece_on(Square square) const { return board[square]; }
 
     std::string to_string() const;
 private:
     u64 piece_bb[6];
     u64 color_bb[2];
+    PieceType board[64];
 
     Color to_move;
 

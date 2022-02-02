@@ -28,6 +28,17 @@ namespace Constants
     constexpr u64 WKING_INIT    = 0x0000000000000010;
     constexpr u64 BKING_INIT    = 0x1000000000000000;
 
+    constexpr PieceType BOARD_INIT[64] = {
+        ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK,
+        PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN,
+        NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
+        NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
+        NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
+        NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
+        PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN,
+        ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK,
+    };
+
     // bitboard representations of lookup tables for piece moves
 
     // index 0 is white pawn pushes, index 1 is black pawn pushes

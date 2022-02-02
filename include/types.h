@@ -84,6 +84,8 @@ enum PieceType : int
     ROOK,
     QUEEN,
     KING,
+
+    NONE,
 };
 
 enum MoveFlags : int

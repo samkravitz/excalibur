@@ -38,6 +38,8 @@ void Board::reset()
     color_bb[WHITE]  = Constants::WPAWNS_INIT | Constants::WKNIGHTS_INIT | Constants::WBISHOPS_INIT | Constants::WROOKS_INIT | Constants::WQUEENS_INIT | Constants::WKING_INIT;
     color_bb[BLACK]  = Constants::BPAWNS_INIT | Constants::BKNIGHTS_INIT | Constants::BBISHOPS_INIT | Constants::BROOKS_INIT | Constants::BQUEENS_INIT | Constants::BKING_INIT;
 
+    std::memcpy(board, Constants::BOARD_INIT, sizeof(board));
+
     to_move = WHITE;
 }
 
