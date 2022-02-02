@@ -5,6 +5,7 @@ SOURCE = src
 INCLUDE = include
 OBJ = \
 	bitboard.o \
+	board.o \
 	util.o \
 
 LIST = $(addprefix $(BIN)/, $(OBJ))
