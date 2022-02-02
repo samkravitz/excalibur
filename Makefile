@@ -7,6 +7,7 @@ OBJ = \
 	bitboard.o \
 	board.o \
 	movegen.o \
+	uci.o \
 	util.o \
 
 LIST = $(addprefix $(BIN)/, $(OBJ))

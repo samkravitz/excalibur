@@ -8,7 +8,11 @@
  * DESCRIPTION: main()
  */
 
+#include "uci.h"
+
 int main(int argc, char **argv)
 {
+    // launch uci handler
+    uci();
     return 0;
 }
