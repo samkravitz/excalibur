@@ -27,6 +27,9 @@ u64 ray_attacks(Square, u64);
 template <PieceType>
 u64 sliding_attacks(Square, u64);
 
+u64 single_push_targets(u64, u64, Color);
+u64 double_push_targets(u64, u64, Color);
+
 u64 diagonal_attacks(Square, u64);
 u64 antidiagonal_attacks(Square, u64);
 u64 rank_attacks(Square, u64);

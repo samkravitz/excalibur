@@ -165,6 +165,32 @@ u64 ray_attacks(Square square, u64 occupied)
     return attacks ^ Constants::ray_attack_table[d][first_blocker];
 }
 
+u64 single_push_targets(u64 pawns, u64 empty, Color c)
+{
+    if (c == WHITE)
+        return shift<NORTH>(pawns) & empty;
+    else
+        return shift<SOUTH>(pawns) & empty;
+}
+
+u64 double_push_targets(u64 pawns, u64 empty, Color c)
+{
+    u64 double_push_target;
+    if (c == WHITE)
+    {
+        double_push_target = 0x00000000FF000000;
+        u64 single_pushes = single_push_targets(pawns, empty, c);
+        return shift<NORTH>(single_pushes) & empty & double_push_target;     
+    }
+
+    else
+    {
+        double_push_target = 0x000000FF00000000;
+        u64 single_pushes = single_push_targets(pawns, empty, c);    
+        return shift<SOUTH>(single_pushes) & empty & double_push_target;     
+    }
+}
+
 u64 diagonal_attacks(Square square, u64 occupied)
 {
     return ray_attacks<NORTHEAST>(square, occupied) | ray_attacks<SOUTHWEST>(square, occupied);
