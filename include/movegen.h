@@ -15,11 +15,13 @@
 #include "board.h"
 #include "move.h"
 
-std::vector<Move> pseudolegal(Board const &, Color);
-std::vector<Move> legal(Board const &, Color);
+std::vector<Move> movegen(Board const &);
 
-inline std::vector<Move> pseudolegal(Board const &board) { return pseudolegal(board, board.mover()); }
-inline std::vector<Move> legal(Board const &board) { return legal(board, board.mover()); }
+template<Color>
+std::vector<Move> pseudolegal(Board const &);
+
+template<Color>
+std::vector<Move> legal(Board const &);
 
 template <Direction>
 u64 ray_attacks(Square, u64);
@@ -27,8 +29,11 @@ u64 ray_attacks(Square, u64);
 template <PieceType>
 u64 sliding_attacks(Square, u64);
 
-u64 single_push_targets(u64, u64, Color);
-u64 double_push_targets(u64, u64, Color);
+template<Color>
+u64 single_push_targets(u64, u64);
+
+template<Color>
+u64 double_push_targets(u64, u64);
 
 u64 diagonal_attacks(Square, u64);
 u64 antidiagonal_attacks(Square, u64);

@@ -15,8 +15,15 @@
 #include "bitboard.h"
 #include "constants.h"
 
-std::vector<Move> pseudolegal(Board const &board, Color c)
+std::vector<Move> movegen(Board const &board)
 {
+    return board.mover() == WHITE ? pseudolegal<WHITE>(board) : pseudolegal<BLACK>(board);
+}
+
+template <Color c>
+std::vector<Move> pseudolegal(Board const &board)
+{
+    static_assert(c == WHITE || c == BLACK);
     std::vector<Move> moves;
 
     // get occupancy set (all pieces)
@@ -27,8 +34,14 @@ std::vector<Move> pseudolegal(Board const &board, Color c)
 
     // generate pseudolegal pawn moves
     u64 pawns = board.pieces(PAWN, c);
-    u64 single_pushes = single_push_targets(pawns, ~occ, c);
-    int perspective = c == WHITE ? -1 : 1;
+    u64 single_pushes = single_push_targets<c>(pawns, ~occ);
+
+    int perspective;
+    if constexpr (c == WHITE)
+        perspective = -1;
+    else if constexpr (c == BLACK)
+        perspective = 1;
+    
     while (single_pushes)
     {
         Square to = bitscan(single_pushes);
@@ -37,7 +50,7 @@ std::vector<Move> pseudolegal(Board const &board, Color c)
         single_pushes &= single_pushes - 1;
     }
 
-    u64 double_pushes = double_push_targets(pawns, ~occ, c);
+    u64 double_pushes = double_push_targets<c>(pawns, ~occ);
     while (double_pushes)
     {
         Square to = bitscan(double_pushes);
@@ -46,17 +59,17 @@ std::vector<Move> pseudolegal(Board const &board, Color c)
         double_pushes &= double_pushes - 1;
     }
 
-    // generate pseudolegal knight moves
-    //auto knights = board.pieces(KNIGHT, c);
-    //for (const auto &from : indeces_set(knights))
-    //{
-    //    auto moves_bb = Constants::knight_move_table[from];
-    //    for (const auto &to : indeces_set(moves_bb))
-    //    {
-    //        if (!(our_pieces & static_cast<Square>(to)))
-    //            moves.push_back(Move(from, to));
-    //    }
-    //}
+     generate pseudolegal knight moves
+    auto knights = board.pieces(KNIGHT, c);
+    for (const auto &from : indeces_set(knights))
+    {
+        auto moves_bb = Constants::knight_move_table[from];
+        for (const auto &to : indeces_set(moves_bb))
+        {
+            if (!(our_pieces & static_cast<Square>(to)))
+                moves.push_back(Move(from, to));
+        }
+    }
 
     //// generate pseudolegal king moves
     //auto king = board.pieces(KING, c);
@@ -127,7 +140,8 @@ std::vector<Move> pseudolegal(Board const &board, Color c)
     return moves;
 }
 
-std::vector<Move> legal(Board const &board, Color c)
+template<Color c>
+std::vector<Move> legal(Board const &board)
 {
     std::vector<Move> moves;
     return moves;
@@ -172,29 +186,34 @@ u64 ray_attacks(Square square, u64 occupied)
     return attacks ^ Constants::ray_attack_table[d][first_blocker];
 }
 
-u64 single_push_targets(u64 pawns, u64 empty, Color c)
+template <Color c>
+u64 single_push_targets(u64 pawns, u64 empty)
 {
-    if (c == WHITE)
+    static_assert(c == WHITE || c == BLACK);
+
+    if constexpr (c == WHITE)
         return shift<NORTH>(pawns) & empty;
-    else
+    else if constexpr (c == BLACK)
         return shift<SOUTH>(pawns) & empty;
 }
 
-u64 double_push_targets(u64 pawns, u64 empty, Color c)
+template <Color c>
+u64 double_push_targets(u64 pawns, u64 empty)
 {
-    u64 double_push_target;
-    if (c == WHITE)
+    static_assert(c == WHITE || c == BLACK);
+
+    if constexpr (c == WHITE)
     {
-        double_push_target = 0x00000000FF000000;
-        u64 single_pushes = single_push_targets(pawns, empty, c);
-        return shift<NORTH>(single_pushes) & empty & double_push_target;     
+        u64 double_push_rank = Bitboard::RANK_BB[RANK_4];
+        u64 single_pushes = single_push_targets<c>(pawns, empty);
+        return shift<NORTH>(single_pushes) & empty & double_push_rank;     
     }
 
-    else
+    else if constexpr (c == BLACK)
     {
-        double_push_target = 0x000000FF00000000;
-        u64 single_pushes = single_push_targets(pawns, empty, c);    
-        return shift<SOUTH>(single_pushes) & empty & double_push_target;     
+        u64 double_push_rank = Bitboard::RANK_BB[RANK_5];
+        u64 single_pushes = single_push_targets<c>(pawns, empty);    
+        return shift<SOUTH>(single_pushes) & empty & double_push_rank;     
     }
 }
 
