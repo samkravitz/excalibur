@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <functional>
 
 #include "bitset_iter.h"
@@ -36,3 +37,26 @@ inline u64 operator^(u64 bitboard, Square square) { return bitboard ^ (1ull << s
 inline u64 &operator&=(u64 &bitboard, Square square) { bitboard = bitboard & (1ull << square); return bitboard; }
 inline u64 &operator|=(u64 &bitboard, Square square) { bitboard = bitboard | (1ull << square); return bitboard; }
 inline u64 &operator^=(u64 &bitboard, Square square) { bitboard = bitboard ^ (1ull << square); return bitboard; }
+
+enum BitscanDirection
+{
+    FORWARD,
+    REVERSE,
+};
+
+template<BitscanDirection d = FORWARD>
+Square bitscan(u64 &bitboard)
+{
+    static_assert(d == FORWARD || d == REVERSE);
+    assert(bitboard != 0);
+
+    int idx = 0;
+    if constexpr (d == FORWARD)
+        idx = __builtin_ctzll(bitboard);
+    else if constexpr (d == REVERSE)
+        idx = 63 - __builtin_clzll(bitboard);
+    
+    bitboard &= bitboard - 1;
+    
+    return static_cast<Square>(idx);
+}
