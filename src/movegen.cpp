@@ -19,49 +19,56 @@ std::vector<Move> pseudolegal(Board const &board, Color c)
 {
     std::vector<Move> moves;
 
-    // get all pieces
-    auto pieces = board.pieces();
+    // get occupancy set (all pieces)
+    u64 occ = board.pieces();
+
     // get all pieces of our color
     auto our_pieces = board.pieces(c);
 
     // generate pseudolegal pawn moves
-    auto pawns = board.pieces(PAWN, c);
-    for (const auto &from : indeces_set(pawns))
+    u64 pawns = board.pieces(PAWN, c);
+    u64 single_pushes = single_push_targets(pawns, ~occ, c);
+    int perspective = c == WHITE ? -1 : 1;
+    while (single_pushes)
     {
-        auto moves_bb = Constants::pawn_push_table[c][from];
-        for (const auto &to : indeces_set(moves_bb))
-        {
-            if (!(pieces & static_cast<Square>(to)))
-                moves.push_back(Move(from, to));
-        }
+        Square to = bitscan(single_pushes);
+        Square from = static_cast<Square>(to + 8 * perspective);
+        moves.push_back(Move(from, to));
+        single_pushes &= single_pushes - 1;
+    }
+
+    u64 double_pushes = double_push_targets(pawns, ~occ, c);
+    while (double_pushes)
+    {
+        Square to = bitscan(double_pushes);
+        Square from = static_cast<Square>(to + 16 * perspective);
+        moves.push_back(Move(from, to));
+        double_pushes &= double_pushes - 1;
     }
 
     // generate pseudolegal knight moves
-    auto knights = board.pieces(KNIGHT, c);
-    for (const auto &from : indeces_set(knights))
-    {
-        auto moves_bb = Constants::knight_move_table[from];
-        for (const auto &to : indeces_set(moves_bb))
-        {
-            if (!(our_pieces & static_cast<Square>(to)))
-                moves.push_back(Move(from, to));
-        }
-    }
+    //auto knights = board.pieces(KNIGHT, c);
+    //for (const auto &from : indeces_set(knights))
+    //{
+    //    auto moves_bb = Constants::knight_move_table[from];
+    //    for (const auto &to : indeces_set(moves_bb))
+    //    {
+    //        if (!(our_pieces & static_cast<Square>(to)))
+    //            moves.push_back(Move(from, to));
+    //    }
+    //}
 
-    // generate pseudolegal king moves
-    auto king = board.pieces(KING, c);
-    for (const auto &from : indeces_set(king))
-    {
-        auto moves_bb = Constants::king_move_table[from];
-        for (const auto &to : indeces_set(moves_bb))
-        {
-            if (!(our_pieces & static_cast<Square>(to)))
-                moves.push_back(Move(from, to));
-        }
-    }
-
-    // get occupancy set (all pieces)
-    u64 occ = board.pieces();
+    //// generate pseudolegal king moves
+    //auto king = board.pieces(KING, c);
+    //for (const auto &from : indeces_set(king))
+    //{
+    //    auto moves_bb = Constants::king_move_table[from];
+    //    for (const auto &to : indeces_set(moves_bb))
+    //    {
+    //        if (!(our_pieces & static_cast<Square>(to)))
+    //            moves.push_back(Move(from, to));
+    //    }
+    //}
 
     // get pseudolegal rook moves
     u64 rooks = board.pieces(ROOK, c);
