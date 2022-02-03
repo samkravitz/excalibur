@@ -4,7 +4,6 @@ BIN = bin
 SOURCE = src
 INCLUDE = include
 OBJ = \
-	bitboard.o \
 	board.o \
 	engine.o \
 	movegen.o \
