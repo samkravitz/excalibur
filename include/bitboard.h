@@ -20,6 +20,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "constants.h"
 #include "types.h"
 
 enum BitscanDirection
@@ -43,6 +44,22 @@ Square bitscan(u64 &bitboard)
     bitboard &= bitboard - 1;
     
     return static_cast<Square>(idx);
+}
+
+template<Direction d>
+u64 shift(u64 bitboard)
+{
+    int shift_amount = Constants::DIRECTION_VALUE[d];
+
+    // positive direction - shift left
+    if constexpr (d == EAST || d == NORTH || d == NORTHEAST || d == NORTHWEST)
+        bitboard <<= shift_amount;
+    
+    // negative direction - shift right
+    else if constexpr (d == WEST || d == SOUTH || d == SOUTHWEST || d == SOUTHEAST)
+        bitboard >>= -1 * shift_amount;
+
+    return bitboard;
 }
 
 inline void print_bitboard(u64 bitboard)

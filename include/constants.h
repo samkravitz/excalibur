@@ -39,6 +39,18 @@ namespace Constants
         ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK,
     };
 
+    // shift amounts for each direction
+    constexpr int DIRECTION_VALUE[8] = {
+        8,  // NORTH
+        9,  // NORHTEAST
+        1,  // EAST
+        -7, // SOUTHEAST
+        -8, // SOUTH
+        -9, // SOUTHWEST
+        -1, // WEST
+        7,  // NORTHWEST
+    };
+
     // bitboard representations of lookup tables for piece moves
 
     // index 0 is white pawn pushes, index 1 is black pawn pushes
