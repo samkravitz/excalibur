@@ -7,6 +7,7 @@ OBJ = \
 	board.o \
 	engine.o \
 	movegen.o \
+	perft.o \
 	uci.o \
 	util.o \
 
