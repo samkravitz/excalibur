@@ -231,3 +231,56 @@ u64 file_attacks(Square square, u64 occupied)
 {
     return ray_attacks<NORTH>(square, occupied) | ray_attacks<SOUTH>(square, occupied);
 }
+
+/**
+ * @brief generates the set of all squares a color attacks
+ * @param board the board
+ * @param c color to generate attack set of
+ * @param occupied occupied set of current board
+ * @return bitboard representing all the squares c attacks
+ */
+static u64 attack_set(Board const &board, Color c, u64 occupied)
+{
+    u64 attacks = 0;
+
+    u64 pawns = board.pieces(PAWN, c);
+    while (pawns)
+    {
+        Square from = bitscan(pawns);
+        attacks |= Constants::pawn_attack_table[c][from];
+    }
+
+    u64 knights = board.pieces(KNIGHT, c);
+    while (knights)
+    {
+        Square from = bitscan(knights);
+        attacks |= Constants::knight_move_table[from];
+    }
+
+    u64 bishops = board.pieces(BISHOP, c);
+    while (bishops)
+    {
+        Square from = bitscan(bishops);
+        attacks |= sliding_attacks<BISHOP>(from, occupied);
+    }
+
+    u64 rooks = board.pieces(ROOK, c);
+    while (rooks)
+    {
+        Square from = bitscan(rooks);
+        attacks |= sliding_attacks<ROOK>(from, occupied);
+    }
+
+    u64 queens = board.pieces(QUEEN, c);
+    while (queens)
+    {
+        Square from = bitscan(queens);
+        attacks |= sliding_attacks<QUEEN>(from, occupied);
+    }
+
+    u64 king = board.pieces(KING, c);
+    Square from = bitscan(king);
+    attacks |= Constants::king_move_table[from];
+
+    return attacks;
+}

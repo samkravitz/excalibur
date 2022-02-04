@@ -39,3 +39,5 @@ u64 diagonal_attacks(Square, u64);
 u64 antidiagonal_attacks(Square, u64);
 u64 rank_attacks(Square, u64);
 u64 file_attacks(Square, u64);
+
+static u64 attack_set(Board const &, Color, u64);
