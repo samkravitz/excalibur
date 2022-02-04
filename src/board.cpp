@@ -43,6 +43,36 @@ void Board::reset()
     captured_piece = NONE;
 }
 
+/**
+ * @brief clears all the pieces off the board
+ */
+void Board::clear()
+{
+    // clear board
+    for (int i = 0; i < 64; i++)
+        board[i] = NONE;
+    
+    // clear piece bb
+    for (int i = 0; i < 6; i++)
+        piece_bb[i] = 0;
+    
+    // clear color bb
+    color_bb[0] = 0;
+    color_bb[1] = 0;
+}
+
+void Board::set_piece(PieceType pt, Square square, Color c)
+{
+    board[square] = pt;
+    piece_bb[pt] |= square;
+    color_bb[c]  |= square;
+}
+
+void Board::set_to_move(Color c)
+{
+    to_move = c;
+}
+
 void Board::make_move(Move const &move)
 {
     Square from = move.from();

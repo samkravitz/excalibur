@@ -17,12 +17,17 @@
 
 #include <string>
 
+#include "bitboard.h"
 #include "move.h"
 #include "types.h"
 class Board
 {
 public:
     Board();
+
+    void clear();
+    void set_piece(PieceType, Square, Color);
+    void set_to_move(Color);
 
     // get all pieces on the board
     inline u64 pieces()                      const { return color_bb[WHITE] | color_bb[BLACK]; }
@@ -32,6 +37,12 @@ public:
     inline u64 pieces(PieceType pt)          const { return piece_bb[pt]; }
     // get all pieces of a certain color and type
     inline u64 pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
+
+    inline Square king_square(Color c) const
+    {
+        u64 king = piece_bb[KING] & color_bb[c];
+        return bitscan(king);
+    }
 
     inline Color mover() const { return to_move; }
     inline PieceType piece_on(Square square) const { return board[square]; }
