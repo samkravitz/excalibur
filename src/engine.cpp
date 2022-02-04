@@ -10,7 +10,10 @@
 
 #include "engine.h"
 
+#include <cctype>
+#include <iostream>
 #include <sstream>
+#include <vector>
 
 #include "move.h"
 #include "util.h"
@@ -38,4 +41,62 @@ void Engine::parse_uci_move(std::string const &move)
 
     Move mv(from, to, flags);
     board.make_move(mv);
+}
+
+void Engine::load_fen(std::string const &fen)
+{
+    board.clear();
+
+    std::stringstream ss(fen);
+    std::string section = "";
+    std::vector<std::string> sections;
+    while (std::getline(ss, section, ' '))
+        sections.push_back(section);
+    
+    // section 1 - piece placement
+    int rank = 7, file = 0;
+    for (auto c : sections[0])
+    {
+        if (std::isalpha(c))
+        {
+            switch (c)
+            {
+                case 'P': board.set_piece(PAWN,   Util::square_from_rank_file(rank, file), WHITE); break;
+                case 'p': board.set_piece(PAWN,   Util::square_from_rank_file(rank, file), BLACK); break;
+                case 'N': board.set_piece(KNIGHT, Util::square_from_rank_file(rank, file), WHITE); break;
+                case 'n': board.set_piece(KNIGHT, Util::square_from_rank_file(rank, file), BLACK); break;
+                case 'B': board.set_piece(BISHOP, Util::square_from_rank_file(rank, file), WHITE); break;
+                case 'b': board.set_piece(BISHOP, Util::square_from_rank_file(rank, file), BLACK); break;
+                case 'R': board.set_piece(ROOK,   Util::square_from_rank_file(rank, file), WHITE); break;
+                case 'r': board.set_piece(ROOK,   Util::square_from_rank_file(rank, file), BLACK); break;
+                case 'Q': board.set_piece(QUEEN,  Util::square_from_rank_file(rank, file), WHITE); break;
+                case 'q': board.set_piece(QUEEN,  Util::square_from_rank_file(rank, file), BLACK); break;
+                case 'K': board.set_piece(KING,   Util::square_from_rank_file(rank, file), WHITE); break;
+                case 'k': board.set_piece(KING,   Util::square_from_rank_file(rank, file), BLACK); break;
+                default:
+                    std::cerr << "Invalid FEN: " << sections[0] << "\n";
+                    return;
+            }
+
+            file += 1;
+        }
+
+        else if (std::isdigit(c))
+            file += c - '0';
+        
+        else if (c == '/')
+        {
+            rank -= 1;
+            file = 0;
+        }
+
+        else
+        {
+            std::cerr << "Invalid FEN: " << sections[0] << "\n";
+            return;
+        }
+    }
+
+    // section 2 - side to move
+    board.set_to_move(sections[1] == "w" ? WHITE : BLACK);
 }

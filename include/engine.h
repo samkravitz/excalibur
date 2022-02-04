@@ -21,4 +21,6 @@ public:
 
     void parse_uci_moves(std::string const &);
     void parse_uci_move(std::string const &);
+
+    void load_fen(std::string const &);
 };
