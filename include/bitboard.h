@@ -18,7 +18,6 @@
 #pragma once
 
 #include <cassert>
-#include <iostream>
 
 #include "constants.h"
 #include "types.h"
@@ -60,20 +59,6 @@ u64 shift(u64 bitboard)
         bitboard >>= -1 * shift_amount;
 
     return bitboard;
-}
-
-inline void print_bitboard(u64 bitboard)
-{
-    for (int rank = RANK_8; rank >= RANK_1; --rank)
-    {
-        for (int file = FILE_A; file <= FILE_H; ++file)
-        {
-            Square s = static_cast<Square>(rank * 8 + file);
-            char c = bitboard & s ? '1' : '*';
-            std::cout << c << ' ';
-        }
-        std::cout << '\n';
-    }
 }
 
 inline u64 operator&(u64 bitboard, Square square) { return bitboard & (1ull << square); }

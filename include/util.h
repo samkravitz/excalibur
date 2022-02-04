@@ -21,4 +21,5 @@ namespace Util
     Square square_from_rank_file(int, int);
     std::string to_algebraic(Square);
     Square from_algebraic(std::string const &);
+    void print_bitboard(u64);
 }

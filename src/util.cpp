@@ -9,6 +9,9 @@
  */
 
 #include "util.h"
+#include "bitboard.h"
+
+#include <iostream>
 
 /**
  * @brief gets the rank & file of a square on the board
@@ -73,4 +76,18 @@ Square Util::from_algebraic(std::string const &square)
     int file = square.at(0) - 'a';
     int rank = square.at(1) - '1';
     return square_from_rank_file(rank, file);
+}
+
+void Util::print_bitboard(u64 bitboard)
+{
+    for (int rank = RANK_8; rank >= RANK_1; --rank)
+    {
+        for (int file = FILE_A; file <= FILE_H; ++file)
+        {
+            Square s = static_cast<Square>(rank * 8 + file);
+            char c = bitboard & s ? '1' : '*';
+            std::cout << c << ' ';
+        }
+        std::cout << '\n';
+    }
 }
