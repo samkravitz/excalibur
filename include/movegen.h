@@ -15,13 +15,16 @@
 #include "board.h"
 #include "move.h"
 
+enum MovegenType
+{
+    LEGAL,
+    PSEUDOLEGAL,
+};
+
+std::vector<Move> generate_moves(Board const &);
+
+template<Color, MovegenType>
 std::vector<Move> movegen(Board const &);
-
-template<Color>
-std::vector<Move> pseudolegal(Board const &);
-
-template<Color>
-std::vector<Move> legal(Board const &);
 
 template <Direction>
 u64 ray_attacks(Square, u64);

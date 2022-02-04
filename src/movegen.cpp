@@ -5,23 +5,24 @@
  * 
  * FILE: movegen.cpp
  * DATE: January 31st, 2022
- * DESCRIPTION: Generation of legal and pseudolegal moves
+ * DESCRIPTION: Generation of legal and pseudolegal moves 
  */
 
 #include "movegen.h"
 
+#include <bit>
 #include <iostream>
 
 #include "bitboard.h"
 #include "constants.h"
 
-std::vector<Move> movegen(Board const &board)
+std::vector<Move> generate_moves(Board const &board)
 {
-    return board.mover() == WHITE ? pseudolegal<WHITE>(board) : pseudolegal<BLACK>(board);
+    return board.mover() == WHITE ? movegen<WHITE, LEGAL>(board) : movegen<BLACK, LEGAL>(board);
 }
 
-template <Color c>
-std::vector<Move> pseudolegal(Board const &board)
+template <Color c, MovegenType type>
+std::vector<Move> movegen(Board const &board)
 {
     static_assert(c == WHITE || c == BLACK);
     std::vector<Move> moves;
@@ -30,9 +31,111 @@ std::vector<Move> pseudolegal(Board const &board)
     u64 occ = board.pieces();
 
     // get all pieces of our color
-    auto our_pieces = board.pieces(c);
+    u64 our_pieces = board.pieces(c);
 
-    // generate pseudolegal pawn moves
+    Square king_square = board.king_square(c);
+
+    // declare variables needed for legal move generation
+    u64 occ_without_king;                // get occupancy set without our king (used for calculating legal moves)
+    u64 opponent_attacks;                // opponents attack set
+    u64 checks;                          // set of squares attacking our king
+    u64 check_mask = 0xffffffffffffffff; // set of squares we are allowed to move to due to check
+    bool in_check, in_double_check;
+    
+    if constexpr (type == LEGAL)
+    {
+        occ_without_king = occ ^ board.pieces(KING, c);
+        opponent_attacks = attack_set(board, ~c, occ_without_king);
+        checks = checkers(board, c);
+        in_check = std::popcount(checks) == 1;
+        in_double_check = std::popcount(checks) > 1;
+
+        /*
+         * if we are in single check, we need to calculate what squares we are allowed to move to
+         * (if we are in double check the only legal moves are king moves)
+         * our options to get out of check are as follows:
+         * 1. move the king out of check
+         * 2. capture the checking piece
+         * 3. block the checking piece (if checking piece is a sliding piece)
+         * 
+         * our check_mask from above helps us for 2 and 3
+         * 
+         * https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/
+         */
+        if (in_check)
+        {
+            // default our moves to only those who capture our checker
+            check_mask = checks;
+
+            Square checker_square = bitscan(checks);
+            PieceType checker_piece = board.piece_on(checker_square);
+
+            // checking piece is a sliding piece, so we can attempt to block
+            if (checker_piece == BISHOP || checker_piece == ROOK || checker_piece == QUEEN)
+            {
+                // TODO - find a better way to calculate ray attack direction
+                auto [king_rank, king_file] = Util::rank_file_from_square(king_square);
+                auto [checker_rank, checker_file] = Util::rank_file_from_square(checker_square);
+                if (king_rank == checker_rank)
+                {
+                    if (king_file > checker_file)
+                        check_mask |= ray_attacks<EAST>(checker_square, occ);
+                    else
+                        check_mask |= ray_attacks<WEST>(checker_square, occ);
+                }
+
+                else if (king_file == checker_file)
+                {
+                    if (king_rank > checker_rank)
+                        check_mask |= ray_attacks<NORTH>(checker_square, occ);
+                    else
+                        check_mask |= ray_attacks<SOUTH>(checker_square, occ);
+                }
+
+                else
+                {
+                    if (king_rank > checker_rank && king_file > checker_file)
+                        check_mask |= ray_attacks<NORTHEAST>(checker_square, occ);
+                    else if (king_rank > checker_rank && king_file < checker_file)
+                        check_mask |= ray_attacks<NORTHWEST>(checker_square, occ);
+                    else if (king_rank < checker_rank && king_file > checker_file)
+                        check_mask |= ray_attacks<SOUTHEAST>(checker_square, occ);
+                    else
+                        check_mask |= ray_attacks<SOUTHWEST>(checker_square, occ);
+                }
+
+                check_mask ^= king_square;
+            }
+        }
+    }
+
+    // generate king moves
+    u64 king = board.pieces(KING, c);
+    Square from = bitscan(king);
+    u64 moves_bb = Constants::king_move_table[from];
+    // filter out attacked squares that are occupied by one of our pieces
+    moves_bb &= ~our_pieces;
+    while (moves_bb)
+    {
+        Square to = bitscan(moves_bb);
+
+        if constexpr (type == LEGAL)
+        {
+            if (opponent_attacks & to)
+                continue;
+        }
+
+        moves.push_back(Move(from, to));
+    }
+
+    // in double check, only king moves are valid, so we can short circuit here
+    if constexpr (type == LEGAL)
+    {
+        if (in_double_check)
+            return moves;
+    }
+
+    // generate pawn moves
     u64 pawns = board.pieces(PAWN, c);
     u64 single_pushes = single_push_targets<c>(pawns, ~occ);
 
@@ -57,7 +160,7 @@ std::vector<Move> pseudolegal(Board const &board)
         moves.push_back(Move(from, to));
     }
 
-    // generate pseudolegal knight moves
+    // generate knight moves
     u64 knights = board.pieces(KNIGHT, c);
     while (knights)
     {
@@ -65,6 +168,8 @@ std::vector<Move> pseudolegal(Board const &board)
         u64 moves_bb = Constants::knight_move_table[from];
         // filter out attacked squares that are occupied by one of our pieces
         moves_bb &= ~our_pieces;
+        // filter out moves not allowed because of check
+        moves_bb &= check_mask;
         while (moves_bb)
         {
             Square to = bitscan(moves_bb);
@@ -72,19 +177,7 @@ std::vector<Move> pseudolegal(Board const &board)
         }
     }
 
-    // generate pseudolegal king moves
-    u64 king = board.pieces(KING, c);
-    Square from = bitscan(king);
-    u64 moves_bb = Constants::king_move_table[from];
-    // filter out attacked squares that are occupied by one of our pieces
-    moves_bb &= ~our_pieces;
-    while (moves_bb)
-    {
-        Square to = bitscan(moves_bb);
-        moves.push_back(Move(from, to));
-    }
-
-    // get pseudolegal rook moves
+    // generate rook moves
     u64 rooks = board.pieces(ROOK, c);
     while (rooks)
     {
@@ -93,6 +186,8 @@ std::vector<Move> pseudolegal(Board const &board)
 
         // filter out attacked squares that are occupied by one of our pieces
         attacks &= ~our_pieces;
+        // filter out moves not allowed because of check
+        moves_bb &= check_mask;
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -100,7 +195,7 @@ std::vector<Move> pseudolegal(Board const &board)
         }
     }
 
-    // get pseudolegal bishop moves
+    // generate bishop moves
     u64 bishops = board.pieces(BISHOP, c);
     while (bishops)
     {
@@ -109,6 +204,8 @@ std::vector<Move> pseudolegal(Board const &board)
 
         // filter out attacked squares that are occupied by one of our pieces
         attacks &= ~our_pieces;
+        // filter out moves not allowed because of check
+        moves_bb &= check_mask;
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -116,7 +213,7 @@ std::vector<Move> pseudolegal(Board const &board)
         }
     }
 
-    // get pseudolegal queen moves
+    // generate queen moves
     u64 queens = board.pieces(QUEEN, c);
     while (queens)
     {
@@ -125,6 +222,8 @@ std::vector<Move> pseudolegal(Board const &board)
 
         // filter out attacked squares that are occupied by one of our pieces
         attacks &= ~our_pieces;
+        // filter out moves not allowed because of check
+        moves_bb &= check_mask;
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -132,13 +231,6 @@ std::vector<Move> pseudolegal(Board const &board)
         }
     }
 
-    return moves;
-}
-
-template<Color c>
-std::vector<Move> legal(Board const &board)
-{
-    std::vector<Move> moves;
     return moves;
 }
 
