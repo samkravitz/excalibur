@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <iostream>
 
 #include "bitboard.h"
 #include "constants.h"
@@ -192,4 +193,9 @@ std::string Board::to_string() const
     }
 
     return res;
+}
+
+void Board::print() const
+{
+    std::cout << to_string() << '\n';
 }

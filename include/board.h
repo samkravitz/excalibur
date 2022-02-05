@@ -51,6 +51,7 @@ public:
     void undo_move(Move const &);
 
     std::string to_string() const;
+    void print() const;
 private:
     u64 piece_bb[6];
     u64 color_bb[2];
