@@ -33,6 +33,9 @@ std::vector<Move> movegen(Board const &board)
     // get all pieces of our color
     u64 our_pieces = board.pieces(c);
 
+    // get all pieces of opponents color
+    u64 opponents = occ & ~our_pieces;
+
     Square king_square = board.king_square(c);
 
     // declare variables needed for legal move generation
@@ -135,16 +138,11 @@ std::vector<Move> movegen(Board const &board)
             return moves;
     }
 
-    // generate pawn moves
+    // generate pawn pushes
     u64 pawns = board.pieces(PAWN, c);
-    u64 single_pushes = single_push_targets<c>(pawns, ~occ);
+    constexpr int perspective = c == WHITE ? -1 : 1;
 
-    int perspective;
-    if constexpr (c == WHITE)
-        perspective = -1;
-    else if constexpr (c == BLACK)
-        perspective = 1;
-    
+    u64 single_pushes = single_push_targets<c>(pawns, ~occ);
     while (single_pushes)
     {
         Square to = bitscan(single_pushes);
@@ -158,6 +156,17 @@ std::vector<Move> movegen(Board const &board)
         Square to = bitscan(double_pushes);
         Square from = static_cast<Square>(to + 16 * perspective);
         moves.push_back(Move(from, to));
+    }
+
+    while (pawns)
+    {
+        Square from = bitscan(pawns);
+        u64 attacks = Constants::pawn_attack_table[c][from] & opponents;
+        while (attacks)
+        {
+            Square to = bitscan(attacks);
+            moves.push_back(Move(from, to, CAPTURE));
+        }
     }
 
     // generate knight moves
@@ -278,10 +287,8 @@ u64 single_push_targets(u64 pawns, u64 empty)
 {
     static_assert(c == WHITE || c == BLACK);
 
-    if constexpr (c == WHITE)
-        return shift<NORTH>(pawns) & empty;
-    else if constexpr (c == BLACK)
-        return shift<SOUTH>(pawns) & empty;
+    constexpr Direction shift_dir = c == WHITE ? NORTH : SOUTH;
+    return shift<shift_dir>(pawns) & empty;
 }
 
 template <Color c>
@@ -289,19 +296,10 @@ u64 double_push_targets(u64 pawns, u64 empty)
 {
     static_assert(c == WHITE || c == BLACK);
 
-    if constexpr (c == WHITE)
-    {
-        u64 double_push_rank = Bitboard::RANK_BB[RANK_4];
-        u64 single_pushes = single_push_targets<c>(pawns, empty);
-        return shift<NORTH>(single_pushes) & empty & double_push_rank;     
-    }
-
-    else if constexpr (c == BLACK)
-    {
-        u64 double_push_rank = Bitboard::RANK_BB[RANK_5];
-        u64 single_pushes = single_push_targets<c>(pawns, empty);    
-        return shift<SOUTH>(single_pushes) & empty & double_push_rank;     
-    }
+    constexpr Direction shift_dir = c == WHITE ? NORTH : SOUTH;
+    constexpr u64 double_push_rank = c == WHITE ? Bitboard::RANK_BB[RANK_4] : Bitboard::RANK_BB[RANK_5];
+    u64 single_pushes = single_push_targets<c>(pawns, empty);
+    return shift<shift_dir>(single_pushes) & empty & double_push_rank;
 }
 
 u64 diagonal_attacks(Square square, u64 occupied)
