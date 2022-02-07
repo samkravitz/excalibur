@@ -35,6 +35,23 @@ void Engine::parse_uci_move(std::string const &move)
     bool is_capture = board.piece_on(to) != NONE;
 
     MoveFlags flags = QUIET_MOVE;
+
+    // check if move is castle
+    if (board.piece_on(from) == KING)
+    {
+        // white kingside castle
+        if (move == "e1g1")
+            flags = KINGSIDE_CASTLE;
+        // white queenside castle
+        else if (move == "e1c1")
+            flags = QUEENSIDE_CASTLE;
+        // black kingside castle
+        else if (move == "e8g8")
+            flags = KINGSIDE_CASTLE;
+        // black queenside castle
+        else if (move == "e8c8")
+            flags = QUEENSIDE_CASTLE;
+    }
     
     if (is_capture)
         flags = CAPTURE;
