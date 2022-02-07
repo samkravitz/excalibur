@@ -38,6 +38,11 @@ std::vector<Move> movegen(Board const &board)
 
     Square king_square = board.king_square(c);
 
+    auto make_flags = [&](Square to) -> MoveFlags
+    {
+        return board.piece_on(to) == NONE ? QUIET_MOVE : CAPTURE;
+    };
+
     // declare variables needed for legal move generation
     u64 occ_without_king;                // get occupancy set without our king (used for calculating legal moves)
     u64 opponent_attacks;                // opponents attack set
@@ -128,7 +133,7 @@ std::vector<Move> movegen(Board const &board)
                 continue;
         }
 
-        moves.push_back(Move(from, to));
+        moves.push_back(Move(from, to, make_flags(to)));
     }
 
     // in double check, only king moves are valid, so we can short circuit here
@@ -185,7 +190,7 @@ std::vector<Move> movegen(Board const &board)
         while (moves_bb)
         {
             Square to = bitscan(moves_bb);
-            moves.push_back(Move(from, to));
+            moves.push_back(Move(from, to, make_flags(to)));
         }
     }
 
@@ -203,7 +208,7 @@ std::vector<Move> movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.push_back(Move(from, to));
+            moves.push_back(Move(from, to, make_flags(to)));
         }
     }
 
@@ -221,7 +226,7 @@ std::vector<Move> movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.push_back(Move(from, to));
+            moves.push_back(Move(from, to, make_flags(to)));
         }
     }
 
@@ -239,7 +244,7 @@ std::vector<Move> movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.push_back(Move(from, to));
+            moves.push_back(Move(from, to, make_flags(to)));
         }
     }
 
