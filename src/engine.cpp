@@ -31,10 +31,28 @@ void Engine::parse_uci_move(std::string const &move)
     Square from = Util::from_algebraic(move.substr(0, 2));
     Square to = Util::from_algebraic(move.substr(2, 2));
 
+    MoveFlags flags = QUIET_MOVE;
+
     // check if move is capture
     bool is_capture = board.piece_on(to) != NONE;
 
-    MoveFlags flags = QUIET_MOVE;
+    // check if move is promotion
+    bool is_promotion = false;
+    if (move.length() == 5)
+    {
+        is_promotion = true;
+        char promo = move.at(4);
+        switch (promo)
+        {
+            case 'q': flags = QUEEN_PROMOTION;  break;
+            case 'k': flags = KNIGHT_PROMOTION; break;
+            case 'b': flags = BISHOP_PROMOTION; break;
+            case 'r': flags = ROOK_PROMOTION;   break;
+            default:
+                std::cerr << "Invalid promotion move: " << move << "\n";
+        }
+    }
+    
 
     // check if move is castle
     if (board.piece_on(from) == KING)
@@ -54,7 +72,25 @@ void Engine::parse_uci_move(std::string const &move)
     }
     
     if (is_capture)
-        flags = CAPTURE;
+    {
+        // capture promotion
+        if (is_promotion)
+        {
+            switch (flags)
+            {
+                case QUEEN_PROMOTION:  flags = QUEEN_PROMO_CAPTURE;  break;
+                case KNIGHT_PROMOTION: flags = KNIGHT_PROMO_CAPTURE; break;
+                case BISHOP_PROMOTION: flags = BISHOP_PROMO_CAPTURE; break;
+                case ROOK_PROMOTION:   flags = ROOK_PROMO_CAPTURE;   break;
+            }
+        }
+
+        // regular capture
+        else
+        {
+            flags = CAPTURE;
+        }
+    }
 
     Move mv(from, to, flags);
     board.make_move(mv);
