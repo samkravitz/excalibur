@@ -37,6 +37,8 @@ public:
     inline Square from()     const { return Square(move_enc >> 6 & 0x3f); }
     inline MoveFlags flags() const { return MoveFlags(move_enc >> 12 & 0xf); }
 
+    inline bool is_castle()     const { return ((flags() == KINGSIDE_CASTLE) || (flags() == QUEENSIDE_CASTLE)); }
+
     std::string to_string()
     {
         std::string res = "";

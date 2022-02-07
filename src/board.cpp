@@ -18,6 +18,27 @@
 #include "constants.h"
 #include "util.h"
 
+/*
+ * this array holds the squares a rook will move to when castling.
+ * the outermost array is the color index
+ * the middle array is the castle type index
+ * the innermost array is { old_square, new_square } of the rook during a castle
+ * 
+ * an example usage is this:
+ * Square old_rook_square = castle_squares[WHITE][KINGSIDE][0]
+ * Square new_rook_square = castle_squares[WHITE][KINGSIDE][1]
+ */
+constexpr Square castle_squares[2][2][2] = {
+    {
+        { H1, F1 },
+        { A1, D1 }
+    },
+    {
+        { H8, F8 },
+        { A8, D8 }
+    }
+};
+
 Board::Board()
 {
     reset();
@@ -88,6 +109,9 @@ void Board::set_to_move(Color c)
 
 void Board::make_move(Move const &move)
 {
+    // save irreversable state
+    save();
+
     Square from = move.from();
     Square to = move.to();
 
@@ -96,6 +120,52 @@ void Board::make_move(Move const &move)
 
     // make sure there is an actual piece on that square
     assert(moved_piece != NONE);
+
+    // update castle rights
+    if (moved_piece == KING || moved_piece == ROOK)
+    {
+        castle_rights[mover()][KINGSIDE]  = false;
+        castle_rights[mover()][QUEENSIDE] = false;
+    }
+
+    // do castle
+    if (move.is_castle())
+    {
+        int idx = move.flags() == KINGSIDE_CASTLE ? 0 : 1;
+
+        Square kold = from, knew = to;
+        Square rold = castle_squares[mover()][idx][0];
+        Square rnew = castle_squares[mover()][idx][1];
+
+        // update the board array
+        board[knew] = KING;
+        board[kold] = NONE;
+        board[rnew] = ROOK;
+        board[rold] = NONE;
+
+        // clear the old king square on the piece bitboard
+        piece_bb[KING] ^= kold;
+        // clear the old rook square on the piece bitboard
+        piece_bb[ROOK] ^= rold;
+        // set the new king square on the piece bitboard
+        piece_bb[KING] |= knew;
+        // set the new rook square on the piece bitboard
+        piece_bb[ROOK] |= rnew;
+
+        // clear the old king square on the color bitboard
+        color_bb[mover()] ^= kold;
+        // clear the old rook square on the color bitboard
+        color_bb[mover()] ^= rold;
+        // set the new king square on the color bitboard
+        color_bb[mover()] |= knew;
+        // set the new rook square on the color bitboard
+        color_bb[mover()] |= rnew;
+
+        // switch the player to move
+        to_move = ~to_move;
+
+        return;
+    }
 
     if (move.flags() == CAPTURE)
     {
@@ -130,6 +200,9 @@ void Board::make_move(Move const &move)
 
 void Board::undo_move(Move const &move)
 {
+    // restore irreversable state
+    restore();
+
     // square the piece was on before moving
     Square old_square = move.from();
     
@@ -144,6 +217,45 @@ void Board::undo_move(Move const &move)
 
     // make sure there is an actual piece on that square
     assert(moved_piece != NONE);
+
+    // undo castle
+    if (move.is_castle())
+    {
+        int idx = move.flags() == KINGSIDE_CASTLE ? 0 : 1;
+
+        Square kold = old_square, knew = new_square;
+        Square rold = castle_squares[moved_color][idx][0];
+        Square rnew = castle_squares[moved_color][idx][1];
+
+        // update the board array
+        board[kold] = KING;
+        board[knew] = NONE;
+        board[rold] = ROOK;
+        board[rnew] = NONE;
+
+        // clear the old king square on the piece bitboard
+        piece_bb[KING] ^= knew;
+        // clear the old rook square on the piece bitboard
+        piece_bb[ROOK] ^= rnew;
+        // set the new king square on the piece bitboard
+        piece_bb[KING] |= kold;
+        // set the new rook square on the piece bitboard
+        piece_bb[ROOK] |= rold;
+
+        // clear the old king square on the color bitboard
+        color_bb[moved_color] ^= knew;
+        // clear the old rook square on the color bitboard
+        color_bb[moved_color] ^= rnew;
+        // set the new king square on the color bitboard
+        color_bb[moved_color] |= kold;
+        // set the new rook square on the color bitboard
+        color_bb[moved_color] |= rold;
+
+        // switch the player to move
+        to_move = ~to_move;
+
+        return;
+    }
 
     board[old_square] = moved_piece;
     board[new_square] = NONE;
