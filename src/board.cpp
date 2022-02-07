@@ -69,6 +69,9 @@ void Board::reset()
     castle_rights[WHITE][QUEENSIDE] = true;
     castle_rights[BLACK][KINGSIDE]  = true;
     castle_rights[BLACK][QUEENSIDE] = true;
+
+    // reset enpassant square
+    ep_sq = EP_NONE;
 }
 
 /**
@@ -93,6 +96,9 @@ void Board::clear()
     castle_rights[WHITE][QUEENSIDE] = false;
     castle_rights[BLACK][KINGSIDE]  = false;
     castle_rights[BLACK][QUEENSIDE] = false;
+
+    // clear enpassant square
+    ep_sq = EP_NONE;
 }
 
 void Board::set_piece(PieceType pt, Square square, Color c)

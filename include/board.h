@@ -58,6 +58,9 @@ public:
     inline bool get_castle_rights(Color c, CastleTypes ct) const { return castle_rights[c][ct]; }
     inline void set_castle_rights(Color c, CastleTypes ct) { castle_rights[c][ct] = true; }
 
+    inline Square get_ep_sq() const { return ep_sq; }
+    inline void set_ep_sq(Square sq) { ep_sq = sq; }
+
     inline Square king_square(Color c) const
     {
         u64 king = piece_bb[KING] & color_bb[c];
@@ -76,6 +79,7 @@ private:
     u64 piece_bb[6];
     u64 color_bb[2];
     bool castle_rights[2][2];
+    Square ep_sq; // enpassant square
     std::stack<BoardState> saved_state;
     PieceType board[64];
 
