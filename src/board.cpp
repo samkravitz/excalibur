@@ -167,7 +167,7 @@ void Board::make_move(Move const &move)
         return;
     }
 
-    if (move.flags() == CAPTURE)
+    if (move.is_capture())
     {
         // save type of piece on the captured square
         captured_piece = piece_on(to);
@@ -193,6 +193,41 @@ void Board::make_move(Move const &move)
 
     // set the destination square on the color bitboard of the moved piece
     color_bb[mover()] |= to;
+
+    if (move.is_promotion())
+    {
+        PieceType promoted_to;
+        switch (move.flags())
+        {
+            case QUEEN_PROMOTION:
+            case QUEEN_PROMO_CAPTURE:
+                promoted_to = QUEEN;
+                break;
+            
+            case KNIGHT_PROMOTION:
+            case KNIGHT_PROMO_CAPTURE:
+                promoted_to = KNIGHT;
+                break;
+
+            case ROOK_PROMOTION:
+            case ROOK_PROMO_CAPTURE:
+                promoted_to = ROOK;
+                break;
+
+            case BISHOP_PROMOTION:
+            case BISHOP_PROMO_CAPTURE:
+                promoted_to = BISHOP;
+                break;
+        }
+
+        // clear the origin square on the bitboard of the promoted pawn
+        piece_bb[PAWN] ^= from;
+
+        // set the destination square on the bitboard of the promoted piece
+        piece_bb[promoted_to] |= to;
+
+        board[to] = promoted_to;
+    }
 
     // switch the player to move
     to_move = ~to_move;
@@ -272,7 +307,7 @@ void Board::undo_move(Move const &move)
     // set the square that the piece originally was on on the color bb
     color_bb[moved_color] |= old_square;
 
-    if (move.flags() == CAPTURE)
+    if (move.is_capture())
     {
         assert(captured_piece != NONE);
         board[new_square] = captured_piece;
@@ -283,6 +318,17 @@ void Board::undo_move(Move const &move)
         // set the square that the captured piece was on color bb
         color_bb[~moved_color] |= new_square;
         captured_piece = NONE;
+    }
+
+    if (move.is_promotion())
+    {
+        // clear the promoted piece
+        piece_bb[moved_piece] ^= old_square;
+
+        // set the pawn bitboard for old_sqaure (we are un-promoting it)
+        piece_bb[PAWN] |= old_square;
+
+        board[old_square] = PAWN;
     }
 
     // switch the player to move
