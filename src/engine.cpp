@@ -165,4 +165,8 @@ void Engine::load_fen(std::string const &fen)
             default: break;
         }
     }
+
+    // section 4 - en passant target square
+    if (sections[3] != "-")
+        board.set_ep_sq(Util::from_algebraic(sections[3]));
 }
