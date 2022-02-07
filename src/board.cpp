@@ -177,6 +177,23 @@ void Board::undo_move(Move const &move)
     to_move = ~to_move;
 }
 
+void Board::save()
+{
+    BoardState bs(castle_rights);
+    saved_state.push(bs);
+}
+
+void Board::restore()
+{
+    assert(!saved_state.empty());
+    auto state = saved_state.top();
+    castle_rights[0][0] = state.castle_rights[0][0];
+    castle_rights[0][1] = state.castle_rights[0][1];
+    castle_rights[1][0] = state.castle_rights[1][0];
+    castle_rights[1][1] = state.castle_rights[1][1];
+    saved_state.pop();
+}
+
 std::string Board::to_string() const
 {
     std::string res = "";

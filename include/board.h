@@ -15,11 +15,28 @@
 
 #pragma once
 
+#include <stack>
 #include <string>
 
 #include "bitboard.h"
 #include "move.h"
 #include "types.h"
+
+// irreversable aspects of a position, like enpassant state, castling rights, and halfmove clock
+struct BoardState
+{
+    BoardState() = delete;
+    BoardState(bool saved_castle_rights[2][2])
+    {
+        castle_rights[0][0] = saved_castle_rights[0][0];
+        castle_rights[0][1] = saved_castle_rights[0][1];
+        castle_rights[1][0] = saved_castle_rights[1][0];
+        castle_rights[1][1] = saved_castle_rights[1][1];
+    }
+    
+    bool castle_rights[2][2];
+};
+
 class Board
 {
 public:
@@ -59,6 +76,7 @@ private:
     u64 piece_bb[6];
     u64 color_bb[2];
     bool castle_rights[2][2];
+    std::stack<BoardState> saved_state;
     PieceType board[64];
 
     // type of the most recently captured piece (used for undo move)
@@ -67,4 +85,6 @@ private:
     Color to_move;
 
     void reset();
+    void save();
+    void restore();
 };
