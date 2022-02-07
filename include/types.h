@@ -105,3 +105,9 @@ enum MoveFlags : int
     ROOK_PROMO_CAPTURE,
     QUEEN_PROMO_CAPTURE,
 };
+
+enum CastleTypes : int
+{
+    KINGSIDE = 0,
+    QUEENSIDE,
+};

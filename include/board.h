@@ -38,6 +38,9 @@ public:
     // get all pieces of a certain color and type
     inline u64 pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
 
+    inline bool get_castle_rights(Color c, CastleTypes ct) const { return castle_rights[c][ct]; }
+    inline void set_castle_rights(Color c, CastleTypes ct) { castle_rights[c][ct] = true; }
+
     inline Square king_square(Color c) const
     {
         u64 king = piece_bb[KING] & color_bb[c];
@@ -55,6 +58,7 @@ public:
 private:
     u64 piece_bb[6];
     u64 color_bb[2];
+    bool castle_rights[2][2];
     PieceType board[64];
 
     // type of the most recently captured piece (used for undo move)

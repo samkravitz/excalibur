@@ -42,6 +42,12 @@ void Board::reset()
 
     to_move = WHITE;
     captured_piece = NONE;
+
+    // reset castling rights
+    castle_rights[WHITE][KINGSIDE]  = true;
+    castle_rights[WHITE][QUEENSIDE] = true;
+    castle_rights[BLACK][KINGSIDE]  = true;
+    castle_rights[BLACK][QUEENSIDE] = true;
 }
 
 /**
@@ -60,6 +66,12 @@ void Board::clear()
     // clear color bb
     color_bb[0] = 0;
     color_bb[1] = 0;
+
+    // clear castling rights
+    castle_rights[WHITE][KINGSIDE]  = false;
+    castle_rights[WHITE][QUEENSIDE] = false;
+    castle_rights[BLACK][KINGSIDE]  = false;
+    castle_rights[BLACK][QUEENSIDE] = false;
 }
 
 void Board::set_piece(PieceType pt, Square square, Color c)
