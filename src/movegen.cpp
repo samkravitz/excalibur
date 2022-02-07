@@ -143,6 +143,7 @@ std::vector<Move> movegen(Board const &board)
     constexpr int perspective = c == WHITE ? -1 : 1;
 
     u64 single_pushes = single_push_targets<c>(pawns, ~occ);
+    single_pushes &= check_mask;
     while (single_pushes)
     {
         Square to = bitscan(single_pushes);
@@ -151,6 +152,7 @@ std::vector<Move> movegen(Board const &board)
     }
 
     u64 double_pushes = double_push_targets<c>(pawns, ~occ);
+    double_pushes &= check_mask;
     while (double_pushes)
     {
         Square to = bitscan(double_pushes);
@@ -162,6 +164,7 @@ std::vector<Move> movegen(Board const &board)
     {
         Square from = bitscan(pawns);
         u64 attacks = Constants::pawn_attack_table[c][from] & opponents;
+        attacks &= check_mask;
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -196,7 +199,7 @@ std::vector<Move> movegen(Board const &board)
         // filter out attacked squares that are occupied by one of our pieces
         attacks &= ~our_pieces;
         // filter out moves not allowed because of check
-        moves_bb &= check_mask;
+        attacks &= check_mask;
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -214,7 +217,7 @@ std::vector<Move> movegen(Board const &board)
         // filter out attacked squares that are occupied by one of our pieces
         attacks &= ~our_pieces;
         // filter out moves not allowed because of check
-        moves_bb &= check_mask;
+        attacks &= check_mask;
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -232,7 +235,7 @@ std::vector<Move> movegen(Board const &board)
         // filter out attacked squares that are occupied by one of our pieces
         attacks &= ~our_pieces;
         // filter out moves not allowed because of check
-        moves_bb &= check_mask;
+        attacks &= check_mask;
         while (attacks)
         {
             Square to = bitscan(attacks);
