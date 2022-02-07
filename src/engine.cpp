@@ -116,4 +116,17 @@ void Engine::load_fen(std::string const &fen)
 
     // section 2 - side to move
     board.set_to_move(sections[1] == "w" ? WHITE : BLACK);
+
+    // section 3 - castle rights
+    for (auto c : sections[2])
+    {
+        switch (c)
+        {
+            case 'K': board.set_castle_rights(WHITE, KINGSIDE);  break;
+            case 'Q': board.set_castle_rights(WHITE, QUEENSIDE); break;
+            case 'k': board.set_castle_rights(BLACK, KINGSIDE);  break;
+            case 'q': board.set_castle_rights(BLACK, QUEENSIDE); break;
+            default: break;
+        }
+    }
 }
