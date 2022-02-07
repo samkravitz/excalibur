@@ -134,6 +134,59 @@ void Board::make_move(Move const &move)
         castle_rights[mover()][QUEENSIDE] = false;
     }
 
+    // update enpassant square
+    if (move.flags() == DOUBLE_PAWN_PUSH)
+    {
+        // check if there is an enemy pawn on either side of us
+
+        // moved pawn is not on A file
+        if (~Bitboard::FILE_BB[FILE_A] & to)
+        {
+            Square one_left = static_cast<Square>(to - 1);
+
+            // there is an enemy pawn immediately to the left of us
+            if (color_bb[~mover()] & piece_bb[PAWN] & one_left)
+                ep_sq = one_left;
+        }
+
+        // moved pawn is not on H file
+        if (~Bitboard::FILE_BB[FILE_H] & to)
+        {
+            Square one_right = static_cast<Square>(to + 1);
+
+            // there is an enemy pawn immediately to the right of us
+            if (color_bb[~mover()] & piece_bb[PAWN] & one_right)
+                ep_sq = one_right;
+        }
+    }
+
+    // clear enpassant square
+    else
+    {
+        ep_sq = EP_NONE;
+    }
+
+    // do enpassant
+    if (move.flags() == ENPASSANT)
+    {
+        // square the captured pawn was on
+        Square captured_square = mover() == WHITE ? static_cast<Square>(to - 8) : static_cast<Square>(to + 8);
+
+        assert(piece_on(captured_square) == PAWN);
+
+        // we are setting up a bitboard to mask out the pawn that is captured enpassant
+        u64 bb = 0;
+        bb |= captured_square;
+
+        // clear the captured square on the piece bitboard
+        piece_bb[PAWN] &= ~bb;
+
+        // clear the captured square on the color bitboard
+        color_bb[~mover()] &= ~bb;
+
+        board[captured_square] = NONE;
+    }
+
     // do castle
     if (move.is_castle())
     {
@@ -258,6 +311,21 @@ void Board::undo_move(Move const &move)
 
     // make sure there is an actual piece on that square
     assert(moved_piece != NONE);
+
+    // undo enpassant
+    if (move.flags() == ENPASSANT)
+    {
+        // square the captured pawn was on
+        Square captured_square = mover() == WHITE ? static_cast<Square>(new_square + 8) : static_cast<Square>(new_square - 8);
+
+        // set the captured square on the piece bitboard
+        piece_bb[PAWN] |= captured_square;
+
+        // set the captured square on the color bitboard
+        color_bb[~moved_color] |= captured_square;
+
+        board[captured_square] = PAWN;
+    }
 
     // undo castle
     if (move.is_castle())

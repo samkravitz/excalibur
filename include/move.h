@@ -39,7 +39,7 @@ public:
 
     inline bool is_castle()     const { return ((flags() == KINGSIDE_CASTLE) || (flags() == QUEENSIDE_CASTLE)); }
     inline bool is_promotion()  const { return move_enc >> 12 & 0x8; }
-    inline bool is_capture()    const { return move_enc >> 12 & 0x4; }
+    inline bool is_capture()    const { return flags() == ENPASSANT ? false : move_enc >> 12 & 0x4; }
 
     std::string to_string()
     {
