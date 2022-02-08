@@ -223,6 +223,44 @@ std::vector<Move> movegen(Board const &board)
         }
     }
 
+    // generate enpassant moves
+    if (board.get_ep_sq() != EP_NONE)
+    {
+        u64 pawns = board.pieces(PAWN, c);
+        while (pawns)
+        {
+            Square from = bitscan(pawns);
+
+            // check if there is an enemy pawn on either side of us
+
+            // moving pawn is not on A file
+            if (~Bitboard::FILE_BB[FILE_A] & from)
+            {
+                Square one_left = static_cast<Square>(from - 1);
+
+                // there is an enemy pawn immediately to the left of us
+                if (board.pieces(PAWN, ~c) & one_left)
+                {
+                    Square to = c == WHITE ? static_cast<Square>(one_left + 8) : static_cast<Square>(one_left - 8);
+                    moves.push_back(Move(from, to, ENPASSANT));
+                }   
+            }
+
+            // moving pawn is not on H file
+            if (~Bitboard::FILE_BB[FILE_H] & from)
+            {
+                Square one_right = static_cast<Square>(from + 1);
+
+                // there is an enemy pawn immediately to the right of us
+                if (board.pieces(PAWN, ~c) & one_right)
+                {
+                    Square to = c == WHITE ? static_cast<Square>(one_right + 8) : static_cast<Square>(one_right - 8);
+                    moves.push_back(Move(from, to, ENPASSANT));
+                }
+            }
+        }
+    }
+
     // generate knight moves
     u64 knights = board.pieces(KNIGHT, c);
     while (knights)
