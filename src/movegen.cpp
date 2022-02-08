@@ -33,6 +33,8 @@ std::vector<Move> movegen(Board const &board)
     // get all pieces of our color
     u64 our_pieces = board.pieces(c);
 
+    constexpr Color opp_color = c == WHITE ? BLACK : WHITE;
+
     // get all pieces of opponents color
     u64 opponents = occ & ~our_pieces;
 
@@ -53,7 +55,7 @@ std::vector<Move> movegen(Board const &board)
     if constexpr (type == LEGAL)
     {
         occ_without_king = occ ^ board.pieces(KING, c);
-        opponent_attacks = attack_set(board, ~c, occ_without_king);
+        opponent_attacks = attack_set<opp_color>(board, occ_without_king);
         checks = checkers(board, c);
         in_check = std::popcount(checks) == 1;
         in_double_check = std::popcount(checks) > 1;
@@ -416,53 +418,54 @@ u64 file_attacks(Square square, u64 occupied)
 
 /**
  * @brief generates the set of all squares a color attacks
- * @param board the board
  * @param c color to generate attack set of
- * @param occupied occupied set of current board
- * @return bitboard representing all the squares c attacks
+ * @param board the board
+ * @param occupied occupied set of entire board
+ * @return bitboard representing all the squares pt attacks
  */
-static u64 attack_set(Board const &board, Color c, u64 occupied)
+template <Color c>
+static u64 attack_set(Board const &board, u64 occupied)
 {
+    return (
+        attack_set<PAWN,   c>(board.pieces(PAWN, c),   occupied) |
+        attack_set<KNIGHT, c>(board.pieces(KNIGHT, c), occupied) |
+        attack_set<BISHOP, c>(board.pieces(BISHOP, c), occupied) |
+        attack_set<ROOK,   c>(board.pieces(ROOK, c),   occupied) |
+        attack_set<QUEEN,  c>(board.pieces(QUEEN, c),  occupied) |
+        attack_set<KING,   c>(board.pieces(KING, c),   occupied)
+    );
+}
+
+/**
+ * @brief generates the set of all squares a type of piece attacks
+ * @param pt the type of piece to generate the attack set of
+ * @param c color to generate attack set of
+ * @param piece_set the set of all pt of color c
+ * @param occupied occupied set of entire board
+ * @return bitboard representing all the squares pt attacks
+ */
+template <PieceType pt, Color c>
+static u64 attack_set(u64 piece_set, u64 occupied)
+{
+    static_assert(pt == PAWN || pt == KNIGHT || pt == KING || pt == BISHOP || pt == ROOK || pt == QUEEN);
+
     u64 attacks = 0;
 
-    u64 pawns = board.pieces(PAWN, c);
-    while (pawns)
+    while (piece_set)
     {
-        Square from = bitscan(pawns);
-        attacks |= Constants::pawn_attack_table[c][from];
+        Square from = bitscan(piece_set);
+        if constexpr (pt == PAWN)
+            attacks |= Constants::pawn_attack_table[c][from];
+        
+        else if constexpr (pt == KNIGHT)
+            attacks |= Constants::knight_move_table[from];
+        
+        else if constexpr (pt == KING)
+            attacks |= Constants::king_move_table[from];
+        
+        else if constexpr (pt == BISHOP || pt == ROOK || pt == QUEEN)
+            attacks |= sliding_attacks<pt>(from, occupied);
     }
-
-    u64 knights = board.pieces(KNIGHT, c);
-    while (knights)
-    {
-        Square from = bitscan(knights);
-        attacks |= Constants::knight_move_table[from];
-    }
-
-    u64 bishops = board.pieces(BISHOP, c);
-    while (bishops)
-    {
-        Square from = bitscan(bishops);
-        attacks |= sliding_attacks<BISHOP>(from, occupied);
-    }
-
-    u64 rooks = board.pieces(ROOK, c);
-    while (rooks)
-    {
-        Square from = bitscan(rooks);
-        attacks |= sliding_attacks<ROOK>(from, occupied);
-    }
-
-    u64 queens = board.pieces(QUEEN, c);
-    while (queens)
-    {
-        Square from = bitscan(queens);
-        attacks |= sliding_attacks<QUEEN>(from, occupied);
-    }
-
-    u64 king = board.pieces(KING, c);
-    Square from = bitscan(king);
-    attacks |= Constants::king_move_table[from];
 
     return attacks;
 }
