@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <stack>
 #include <string>
 
@@ -74,7 +75,11 @@ public:
     void undo_move(Move const &);
 
     std::string to_string() const;
-    void print() const;
+    friend std::ostream &operator<<(std::ostream &os, Board const &b)
+    {
+        os << b.to_string();
+        return os;
+    }
 private:
     u64 piece_bb[6];
     u64 color_bb[2];

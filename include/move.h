@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include "util.h"
 #include "types.h"
 
@@ -41,31 +43,36 @@ public:
     inline bool is_promotion()  const { return move_enc >> 12 & 0x8; }
     inline bool is_capture()    const { return flags() == ENPASSANT ? false : move_enc >> 12 & 0x4; }
 
-    std::string to_string()
+    friend std::ostream &operator<<(std::ostream &os, const Move &mv)
     {
-        std::string res = "";
-        res += "{ ";
-        res += Util::to_algebraic(from());
-        res += Util::to_algebraic(to());
-        
-        switch (flags())
+        std::string promo = "";
+        if (mv.is_promotion())
         {
-            case DOUBLE_PAWN_PUSH:     res += " "; res += "DOUBLE_PAWN_PUSH";     break;
-            case KINGSIDE_CASTLE:      res += " "; res += "KINGSIDE_CASTLE";      break;
-            case QUEENSIDE_CASTLE:     res += " "; res += "QUEENSIDE_CASTLE";     break;
-            case CAPTURE:              res += " "; res += "CAPTURE";              break;
-            case ENPASSANT:            res += " "; res += "ENPASSANT";            break;
-            case KNIGHT_PROMOTION:     res += " "; res += "KNIGHT_PROMOTION";     break;
-            case BISHOP_PROMOTION:     res += " "; res += "BISHOP_PROMOTION";     break;
-            case ROOK_PROMOTION:       res += " "; res += "ROOK_PROMOTION";       break;
-            case QUEEN_PROMOTION:      res += " "; res += "QUEEN_PROMOTION";      break;
-            case KNIGHT_PROMO_CAPTURE: res += " "; res += "KNIGHT_PROMO_CAPTURE"; break;
-            case BISHOP_PROMO_CAPTURE: res += " "; res += "BISHOP_PROMO_CAPTURE"; break;
-            case ROOK_PROMO_CAPTURE:   res += " "; res += "ROOK_PROMO_CAPTURE";   break;
-            case QUEEN_PROMO_CAPTURE:  res += " "; res += "QUEEN_PROMO_CAPTURE";  break;
+            switch (mv.flags())
+            {
+                case QUEEN_PROMOTION:
+                case QUEEN_PROMO_CAPTURE:
+                    promo = "q";
+                    break;
+                
+                case KNIGHT_PROMOTION:
+                case KNIGHT_PROMO_CAPTURE:
+                    promo = "n";
+                    break;
+
+                case ROOK_PROMOTION:
+                case ROOK_PROMO_CAPTURE:
+                    promo = "r";
+                    break;
+
+                case BISHOP_PROMOTION:
+                case BISHOP_PROMO_CAPTURE:
+                    promo = "b";
+                    break;
+            }
         }
-        res += " }";
-        return res;
+        os << Util::to_algebraic(mv.from()) << Util::to_algebraic(mv.to()) << promo;
+        return os;
     }
 
 private:
