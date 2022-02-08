@@ -47,6 +47,23 @@ public:
         res += "{ ";
         res += Util::to_algebraic(from());
         res += Util::to_algebraic(to());
+        
+        switch (flags())
+        {
+            case DOUBLE_PAWN_PUSH:     res += " "; res += "DOUBLE_PAWN_PUSH";     break;
+            case KINGSIDE_CASTLE:      res += " "; res += "KINGSIDE_CASTLE";      break;
+            case QUEENSIDE_CASTLE:     res += " "; res += "QUEENSIDE_CASTLE";     break;
+            case CAPTURE:              res += " "; res += "CAPTURE";              break;
+            case ENPASSANT:            res += " "; res += "ENPASSANT";            break;
+            case KNIGHT_PROMOTION:     res += " "; res += "KNIGHT_PROMOTION";     break;
+            case BISHOP_PROMOTION:     res += " "; res += "BISHOP_PROMOTION";     break;
+            case ROOK_PROMOTION:       res += " "; res += "ROOK_PROMOTION";       break;
+            case QUEEN_PROMOTION:      res += " "; res += "QUEEN_PROMOTION";      break;
+            case KNIGHT_PROMO_CAPTURE: res += " "; res += "KNIGHT_PROMO_CAPTURE"; break;
+            case BISHOP_PROMO_CAPTURE: res += " "; res += "BISHOP_PROMO_CAPTURE"; break;
+            case ROOK_PROMO_CAPTURE:   res += " "; res += "ROOK_PROMO_CAPTURE";   break;
+            case QUEEN_PROMO_CAPTURE:  res += " "; res += "QUEEN_PROMO_CAPTURE";  break;
+        }
         res += " }";
         return res;
     }
