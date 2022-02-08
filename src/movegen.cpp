@@ -83,38 +83,23 @@ std::vector<Move> movegen(Board const &board)
             // checking piece is a sliding piece, so we can attempt to block
             if (checker_piece == BISHOP || checker_piece == ROOK || checker_piece == QUEEN)
             {
-                // TODO - find a better way to calculate ray attack direction
-                auto [king_rank, king_file] = Util::rank_file_from_square(king_square);
-                auto [checker_rank, checker_file] = Util::rank_file_from_square(checker_square);
-                if (king_rank == checker_rank)
+                switch (Constants::dir_lookup_table[checker_square][king_square])
                 {
-                    if (king_file > checker_file)
-                        check_mask |= ray_attacks<EAST>(checker_square, occ);
-                    else
-                        check_mask |= ray_attacks<WEST>(checker_square, occ);
-                }
-
-                else if (king_file == checker_file)
-                {
-                    if (king_rank > checker_rank)
-                        check_mask |= ray_attacks<NORTH>(checker_square, occ);
-                    else
-                        check_mask |= ray_attacks<SOUTH>(checker_square, occ);
-                }
-
-                else
-                {
-                    if (king_rank > checker_rank && king_file > checker_file)
-                        check_mask |= ray_attacks<NORTHEAST>(checker_square, occ);
-                    else if (king_rank > checker_rank && king_file < checker_file)
-                        check_mask |= ray_attacks<NORTHWEST>(checker_square, occ);
-                    else if (king_rank < checker_rank && king_file > checker_file)
-                        check_mask |= ray_attacks<SOUTHEAST>(checker_square, occ);
-                    else
-                        check_mask |= ray_attacks<SOUTHWEST>(checker_square, occ);
+                    case NORTH:     check_mask |= ray_attacks<NORTH>(checker_square, occ);     break;
+                    case SOUTH:     check_mask |= ray_attacks<SOUTH>(checker_square, occ);     break;
+                    case EAST:      check_mask |= ray_attacks<EAST>(checker_square, occ);      break;
+                    case WEST:      check_mask |= ray_attacks<WEST>(checker_square, occ);      break;
+                    case NORTHEAST: check_mask |= ray_attacks<NORTHEAST>(checker_square, occ); break;
+                    case NORTHWEST: check_mask |= ray_attacks<NORTHWEST>(checker_square, occ); break;
+                    case SOUTHEAST: check_mask |= ray_attacks<SOUTHEAST>(checker_square, occ); break;
+                    case SOUTHWEST: check_mask |= ray_attacks<SOUTHWEST>(checker_square, occ); break;
                 }
 
                 check_mask ^= king_square;
+            }
+        }
+
+
             }
         }
     }
