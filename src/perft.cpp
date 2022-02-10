@@ -51,3 +51,62 @@ int perft(int depth, std::string fen)
 
     return helper(depth);
 }
+
+/**
+ * @brief test accuracy of move generation
+ * @param depth number of ply to search
+ * @param fen optional fen string of initial position to begin search
+ * @return A PerftDetail struct containing statistics from the perft
+ */
+PerftDetail perft_detail(int depth, std::string fen)
+{
+    Engine engine;
+
+    if (fen != "")
+        engine.load_fen(fen);
+    
+    PerftDetail pd;
+    
+    std::function<int(int)> helper = [&](int depth) -> int
+    {
+        int nodes = 0;
+        auto legal_moves = generate_moves(engine.board);
+
+        if (depth == 0)
+        {
+            if (engine.board.in_check(engine.board.mover()))
+            {
+                pd.checks++;
+
+                if (legal_moves.size() == 0)
+                    pd.checkmates++;
+            }
+
+            return 1;
+        }
+
+        for (auto mv : legal_moves)
+        {
+            if (depth == 1)
+            {
+                if (mv.is_capture())
+                    pd.captures++;
+                if (mv.is_castle())
+                    pd.castles++;
+                if (mv.flags() == ENPASSANT)
+                {
+                    pd.captures++;
+                    pd.enpassants++;
+                }
+            }
+            engine.board.make_move(mv);
+            nodes += helper(depth - 1);
+            engine.board.undo_move(mv);
+        }
+
+        return nodes;
+    };
+
+    pd.nodes = helper(depth);
+    return pd;
+}
