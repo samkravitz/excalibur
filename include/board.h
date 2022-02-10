@@ -88,8 +88,8 @@ private:
     std::stack<BoardState> saved_state;
     PieceType board[64];
 
-    // type of the most recently captured piece (used for undo move)
-    PieceType captured_piece;
+    // type of the most recently captured pieces (used for undo move)
+    std::stack<PieceType> capture_stack;
 
     Color to_move;
 

@@ -61,7 +61,6 @@ void Board::reset()
     std::memcpy(board, Constants::BOARD_INIT, sizeof(board));
 
     to_move = WHITE;
-    captured_piece = NONE;
 
     // reset castling rights
     castle_rights[WHITE][KINGSIDE]  = true;
@@ -228,7 +227,9 @@ void Board::make_move(Move const &move)
     if (move.is_capture())
     {
         // save type of piece on the captured square
-        captured_piece = piece_on(to);
+        auto captured_piece = piece_on(to);
+        assert(captured_piece != NONE);
+        capture_stack.push(captured_piece);
 
         // determine if this capture changes castling rights
         if (captured_piece == ROOK)
@@ -392,6 +393,9 @@ void Board::undo_move(Move const &move)
 
     if (move.is_capture())
     {
+        // pop the topmost captured piece from stack
+        auto captured_piece = capture_stack.top();
+        capture_stack.pop();
         assert(captured_piece != NONE);
         board[new_square] = captured_piece;
 
