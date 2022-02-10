@@ -361,6 +361,23 @@ u64 ray_attacks(Square square, u64 occupied)
     return attacks ^ Constants::ray_attack_table[d][first_blocker];
 }
 
+/**
+ * @brief get xray attacks
+ * @param occ occupied set of the board
+ * @param blockers set of blockers of the xray (subset of occ)
+ * @param square square on which the xrayer is on
+ * @return set of xray attacks
+ */
+template <PieceType pt>
+u64 xray_attacks(u64 occ, u64 blockers, Square square)
+{
+    static_assert(pt == ROOK || pt == BISHOP);
+
+    u64 attacks = sliding_attacks<pt>(square, occ);
+    blockers &= attacks;
+    return attacks ^ sliding_attacks<pt>(square, occ ^ blockers);
+}
+
 template <Color c>
 u64 single_push_targets(u64 pawns, u64 empty)
 {

@@ -32,6 +32,9 @@ u64 ray_attacks(Square, u64);
 template <PieceType>
 u64 sliding_attacks(Square, u64);
 
+template <PieceType>
+u64 xray_attacks(u64, u64, Square);
+
 template<Color>
 u64 single_push_targets(u64, u64);
 
