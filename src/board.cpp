@@ -230,6 +230,16 @@ void Board::make_move(Move const &move)
         // save type of piece on the captured square
         captured_piece = piece_on(to);
 
+        // determine if this capture changes castling rights
+        if (captured_piece == ROOK)
+        {
+            if (to == H1 || to == H8)
+                castle_rights[~mover()][KINGSIDE] = false;
+            
+            if (to == A1 || to == A8)
+                castle_rights[~mover()][QUEENSIDE] = false;
+        }
+
         // unset the captured square
         piece_bb[captured_piece] ^= to;
 
