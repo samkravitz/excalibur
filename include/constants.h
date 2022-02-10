@@ -51,6 +51,16 @@ namespace Constants
         7,  // NORTHWEST
     };
 
+    // material value of pieces
+    constexpr float PIECE_VALUE[6] = {
+        1.0f,   // PAWN
+        3.0f,   // KNIGHT
+        3.0f,   // BISHOP
+        5.0f,   // ROOK
+        9.0f,   // QUEEN
+        100.0f, // KING
+    };
+
     // bitboard representations of lookup tables for piece moves
 
     // index 0 is white pawn attacks, index 1 is black pawn attacks

@@ -10,13 +10,81 @@
 
 #include "engine.h"
 
+#include <bit>
 #include <cctype>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
+#include "constants.h"
 #include "move.h"
+#include "movegen.h"
 #include "util.h"
+
+/**
+ * @brief evaluate a position
+ * @return the evaluation - a more positive score is better for white while a more negative score is better for black
+ */
+float Engine::evaluate()
+{
+    float eval = 0.0f;
+
+    eval += std::popcount(board.pieces(PAWN, WHITE))   * Constants::PIECE_VALUE[PAWN];
+    eval += std::popcount(board.pieces(KNIGHT, WHITE)) * Constants::PIECE_VALUE[KNIGHT];
+    eval += std::popcount(board.pieces(BISHOP, WHITE)) * Constants::PIECE_VALUE[BISHOP];
+    eval += std::popcount(board.pieces(ROOK, WHITE))   * Constants::PIECE_VALUE[ROOK];
+    eval += std::popcount(board.pieces(QUEEN, WHITE))  * Constants::PIECE_VALUE[QUEEN];
+
+    eval -= std::popcount(board.pieces(PAWN, BLACK))   * Constants::PIECE_VALUE[PAWN];
+    eval -= std::popcount(board.pieces(KNIGHT, BLACK)) * Constants::PIECE_VALUE[KNIGHT];
+    eval -= std::popcount(board.pieces(BISHOP, BLACK)) * Constants::PIECE_VALUE[BISHOP];
+    eval -= std::popcount(board.pieces(ROOK, BLACK))   * Constants::PIECE_VALUE[ROOK];
+    eval -= std::popcount(board.pieces(QUEEN, BLACK))  * Constants::PIECE_VALUE[QUEEN];
+
+    int perspective = board.mover() == WHITE ? 1 : -1;
+
+    return eval * perspective;
+}
+}
+
+
+/**
+ * @brief find the best move in a position
+ * @return tuple of <best_move, evaluation>
+ */
+std::tuple<Move, float> Engine::best_move()
+{
+    auto legal_moves = generate_moves(board);
+    Color to_move = board.mover();
+    auto best_evalutation = to_move == WHITE ? -1000 : 1000;
+    std::vector<std::tuple<Move, float>> considered_moves;
+
+    const auto ge = [](float a, float b) { return std::greater<float>{}(a, b); };
+    const auto le = [](float a, float b) { return std::less<float>{}(a, b); };
+
+    auto cmp_func = to_move == WHITE ? +ge : +le;
+
+    for (auto const &mv : legal_moves)
+    {
+        board.make_move(mv);
+        float eval = evaluate();
+
+        if (eval == best_evalutation)
+            considered_moves.push_back(std::make_tuple(mv, eval));
+
+        else if (cmp_func(eval, best_evalutation))
+        {
+            considered_moves.clear();
+            considered_moves.push_back(std::make_tuple(mv, eval));
+            best_evalutation = eval;
+        }
+
+        board.undo_move(mv);
+    }
+
+    return Util::get_random_element(considered_moves);
+}
 
 void Engine::parse_uci_moves(std::string const &moves)
 {
