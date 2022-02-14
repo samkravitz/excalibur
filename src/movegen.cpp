@@ -284,3 +284,26 @@ static u64 attack_set(Board const &board, Color c, u64 occupied)
 
     return attacks;
 }
+
+/**
+ * @brief calculates the set of all attackers to a color's king
+ * @param board the board
+ * @param c the color of the king we are checking
+ * @return the set of all squares attacking c's king
+ */
+u64 checkers(Board const &board, Color c)
+{
+    u64 attackers = 0;
+
+    // get occupancy set (all pieces)
+    u64 occ = board.pieces();
+
+    Square king_square = board.king_square(c);
+
+    attackers |= Constants::pawn_attack_table[c][king_square] & board.pieces(PAWN, ~c);
+    attackers |= Constants::knight_move_table[king_square]    & board.pieces(KNIGHT, ~c);
+    attackers |= sliding_attacks<BISHOP>(king_square, occ)    & board.pieces(BISHOP, ~c);
+    attackers |= sliding_attacks<ROOK>(king_square, occ)      & board.pieces(ROOK, ~c);
+    attackers |= sliding_attacks<QUEEN>(king_square, occ)     & board.pieces(QUEEN, ~c);
+    return attackers;
+}
