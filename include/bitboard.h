@@ -45,6 +45,22 @@ Square bitscan(u64 &bitboard)
     return static_cast<Square>(idx);
 }
 
+// just like the other bitscan except it doesn't modify its argument
+template<BitscanDirection d = FORWARD>
+Square bitstcan_cp(u64 bitboard)
+{
+    static_assert(d == FORWARD || d == REVERSE);
+    assert(bitboard != 0);
+
+    int idx = 0;
+    if constexpr (d == FORWARD)
+        idx = __builtin_ctzll(bitboard);
+    else if constexpr (d == REVERSE)
+        idx = 63 - __builtin_clzll(bitboard);
+        
+    return static_cast<Square>(idx);
+}
+
 template<Direction d>
 u64 shift(u64 bitboard)
 {
