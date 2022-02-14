@@ -50,9 +50,8 @@ std::vector<Move> movegen(Board const &board)
     u64 opponent_attacks;                 // opponents attack set
     u64 checks;                           // set of squares attacking our king
     u64 check_mask  = 0xffffffffffffffff; // set of squares we are allowed to move to due to check
-    u64 pin_bb;                           // set of squares that if our piece was on, it would be pinned
     u64 pinners;                          // set of squares on which is a piece pinning us
-    u64 pinned;                           // set of squares on which we haved a pinned piece
+    u64 pinned = 0;                       // set of squares on which we haved a pinned piece
     u64 pinner_rays = 0xffffffffffffffff; // set of all rays from a pinner to our king (with pinned piece remove)
     bool in_check, in_double_check;
     
@@ -104,23 +103,6 @@ std::vector<Move> movegen(Board const &board)
         }
 
         // calculate pinned set
-        // get moves from opponents sliding pieces
-        u64 opponents_sliding = (
-            attack_set<BISHOP, opp_color>(board.pieces(BISHOP, opp_color), occ) |
-            attack_set<ROOK,   opp_color>(board.pieces(ROOK, opp_color), occ)   |
-            attack_set<QUEEN,  opp_color>(board.pieces(QUEEN, opp_color), occ)
-        );
-        opponents_sliding &= ~opponents;
-
-        // get sliding piece moves from my king to the opposite direction
-        u64 king_sliding = sliding_attacks<QUEEN>(king_square, occ);
-
-        // the intersection of these sets is the pinned set
-        pin_bb = opponents_sliding & king_sliding;
-        pinned = pin_bb & our_pieces;
-
-        // occupancy set exluded our pinned pieces
-        u64 occ_without_pinned = occ ^ (our_pieces & pin_bb);
 
         // get opponent's rook/queen and bishop/queen sets
         u64 opRQ = board.pieces(ROOK, ~c)   | board.pieces(QUEEN, ~c);
@@ -129,15 +111,60 @@ std::vector<Move> movegen(Board const &board)
         pinners = xray_attacks<ROOK>(occ, our_pieces, king_square) & opRQ;
         pinners |= xray_attacks<BISHOP>(occ, our_pieces, king_square) & opBQ;
 
-        
-        // if we have pinned pieces, calculate pinner rays
-        if (pinned)
+        // if there are pinners, calculate the pinned set
+        if (pinners)
         {
+            u64 tmp = pinners;
+            while (tmp)
+            {
+                Square from = bitscan(tmp);
+                u64 ray;
+                switch (Constants::dir_lookup_table[from][king_square])
+                {
+                    case NORTH:    
+                        ray = ray_attacks<NORTH>(from, occ);
+                        pinned |= bitstcan_cp(ray & our_pieces);
+                        break;
+                    case SOUTH:    
+                        ray = ray_attacks<SOUTH>(from, occ);
+                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                        break;
+                    case EAST:     
+                        ray = ray_attacks<EAST>(from, occ);
+                        pinned |= bitstcan_cp(ray & our_pieces);
+                        break;
+                    case WEST:     
+                        ray = ray_attacks<WEST>(from, occ);
+                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                        break;
+                    case NORTHEAST:
+                        ray = ray_attacks<NORTHEAST>(from, occ);
+                        pinned |= bitstcan_cp(ray & our_pieces);
+                        break;
+                    case NORTHWEST:
+                        ray = ray_attacks<NORTHWEST>(from, occ);
+                        pinned |= bitstcan_cp(ray & our_pieces);
+                        break;
+                    case SOUTHEAST:
+                        ray = ray_attacks<SOUTHEAST>(from, occ);
+                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                        break;
+                    case SOUTHWEST:
+                        ray = ray_attacks<SOUTHWEST>(from, occ);
+                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                        break;
+                }
+            }
+
+            // calculate pinner rays
             pinner_rays = 0;
 
+            // occupancy set exluded our pinned pieces
+            u64 occ_without_pinned = occ ^ pinned;
             while (pinners)
             {
                 Square from = bitscan(pinners);
+                pinner_rays |= from;
                 switch (Constants::dir_lookup_table[from][king_square])
                 {
                     case NORTH:     pinner_rays |= ray_attacks<NORTH>(from, occ_without_pinned);     break;
@@ -149,7 +176,6 @@ std::vector<Move> movegen(Board const &board)
                     case SOUTHEAST: pinner_rays |= ray_attacks<SOUTHEAST>(from, occ_without_pinned); break;
                     case SOUTHWEST: pinner_rays |= ray_attacks<SOUTHWEST>(from, occ_without_pinned); break;
                 }
-                pinner_rays |= from;
             }
         }
     }
@@ -232,12 +258,15 @@ std::vector<Move> movegen(Board const &board)
 
     u64 single_pushes = single_push_targets<c>(pawns, ~occ);
     single_pushes &= check_mask;
-    single_pushes &= pinner_rays;
     constexpr u64 promotion_rank = c == WHITE ? Bitboard::RANK_BB[RANK_8] : Bitboard::RANK_BB[RANK_1];
     while (single_pushes)
     {
         Square to = bitscan(single_pushes);
         Square from = static_cast<Square>(to + 8 * perspective);
+
+        // check if pawn is pinned and if it's unable to push
+        if (pinned & from && !(pinner_rays & to))
+            continue;
 
         // single push is a promotion
         if (promotion_rank & to)
@@ -256,11 +285,15 @@ std::vector<Move> movegen(Board const &board)
 
     u64 double_pushes = double_push_targets<c>(pawns, ~occ);
     double_pushes &= check_mask;
-    double_pushes &= pinner_rays;
     while (double_pushes)
     {
         Square to = bitscan(double_pushes);
         Square from = static_cast<Square>(to + 16 * perspective);
+
+        // check if pawn is pinned and if it's unable to push
+        if (pinned & from && !(pinner_rays & to))
+            continue;
+
         moves.push_back(Move(from, to));
     }
 
@@ -269,10 +302,13 @@ std::vector<Move> movegen(Board const &board)
         Square from = bitscan(pawns);
         u64 attacks = Constants::pawn_attack_table[c][from] & opponents;
         attacks &= check_mask;
-        attacks &= pinner_rays;
         while (attacks)
         {
             Square to = bitscan(attacks);
+
+            // check if pawn is pinned and if it's unable to attack
+            if (pinned & from && !(pinner_rays & to))
+                continue;
 
             // capture is a promotion
             if (promotion_rank & to)
@@ -356,7 +392,10 @@ std::vector<Move> movegen(Board const &board)
         attacks &= ~our_pieces;
         // filter out moves not allowed because of check
         attacks &= check_mask;
-        attacks &= pinner_rays;
+
+        if (pinned & from)
+            attacks &= pinner_rays;
+
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -375,7 +414,10 @@ std::vector<Move> movegen(Board const &board)
         attacks &= ~our_pieces;
         // filter out moves not allowed because of check
         attacks &= check_mask;
-        attacks &= pinner_rays;
+        
+        if (pinned & from)
+            attacks &= pinner_rays;
+
         while (attacks)
         {
             Square to = bitscan(attacks);
@@ -394,7 +436,10 @@ std::vector<Move> movegen(Board const &board)
         attacks &= ~our_pieces;
         // filter out moves not allowed because of check
         attacks &= check_mask;
-        attacks &= pinner_rays;
+        
+        if (pinned & from)
+            attacks &= pinner_rays;
+
         while (attacks)
         {
             Square to = bitscan(attacks);
