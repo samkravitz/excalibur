@@ -297,6 +297,9 @@ void Board::make_move(Move const &move)
         // set the destination square on the bitboard of the promoted piece
         piece_bb[promoted_to] |= to;
 
+        // clear the destination square on the bitboard of the promoted pawn
+        piece_bb[PAWN] ^= to;
+
         board[to] = promoted_to;
     }
 
