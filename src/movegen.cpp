@@ -294,7 +294,7 @@ std::vector<Move> movegen(Board const &board)
         if (pinned & from && !(pinner_rays & to))
             continue;
 
-        moves.push_back(Move(from, to));
+        moves.push_back(Move(from, to, DOUBLE_PAWN_PUSH));
     }
 
     while (pawns)
