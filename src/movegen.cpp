@@ -143,6 +143,52 @@ std::vector<Move> movegen(Board const &board)
             return moves;
     }
 
+    // generate castle moves
+    if (!in_check)
+    {
+        // check for kingside castle
+        if (board.get_castle_rights(c, KINGSIDE))
+        {
+            constexpr Square s1 = c == WHITE ? F1 : F8;
+            constexpr Square s2 = c == WHITE ? G1 : G8;
+
+            bool castling_impeded_by_check = false;
+            bool castling_impeded_by_piece = false;
+
+            // castling impeded by check
+            if (opponent_attacks & s1 || opponent_attacks & s2)
+                castling_impeded_by_check = true;
+            
+            // castling impeded by another piece
+            if (occ & s1 || occ & s2)
+                castling_impeded_by_piece = true;
+
+            if (!castling_impeded_by_check && !castling_impeded_by_piece)
+                moves.push_back(Move(king_square, s2, KINGSIDE_CASTLE));
+        }
+
+        // check for queenside castle
+        if (board.get_castle_rights(c, QUEENSIDE))
+        {
+            constexpr Square s1 = c == WHITE ? D1 : D8;
+            constexpr Square s2 = c == WHITE ? C1 : C8;
+
+            bool castling_impeded_by_check = false;
+            bool castling_impeded_by_piece = false;
+
+            // castling impeded by check
+            if (opponent_attacks & s1 || opponent_attacks & s2)
+                castling_impeded_by_check = true;
+            
+            // castling impeded by another piece
+            if (occ & s1 || occ & s2)
+                castling_impeded_by_piece = true;
+
+            if (!castling_impeded_by_check && !castling_impeded_by_piece)
+                moves.push_back(Move(king_square, s2, QUEENSIDE_CASTLE));
+        }
+    }
+
     // generate pawn pushes
     u64 pawns = board.pieces(PAWN, c);
     constexpr int perspective = c == WHITE ? -1 : 1;
