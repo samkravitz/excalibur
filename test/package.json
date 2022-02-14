@@ -1,0 +1,10 @@
+{
+  "name": "excalibur-tests",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "chess.js": "^0.12.1",
+    "kokopu": "^2.2.1"
+  }
+}
