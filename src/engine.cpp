@@ -10,6 +10,7 @@
 
 #include "engine.h"
 
+#include <algorithm>
 #include <bit>
 #include <cctype>
 #include <functional>
@@ -80,6 +81,53 @@ std::tuple<Move, float> Engine::negamax(int depth)
     {
         board.make_move(mv);
         float score = helper(depth - 1);
+        board.undo_move(mv);
+        if (score > max)
+        {
+            max = score;
+            best_move = mv;
+        }
+    }
+
+    return std::make_tuple(best_move, max);
+}
+
+/**
+ * @brief use the alpha-beta pruning algorithm to search positions
+ * @param depth number of ply into the future to search
+ * @return tuple of <best_move, evaluation>
+ */
+std::tuple<Move, float> Engine::alphabeta(int depth)
+{
+    std::function<float(int, float, float)> helper = [&](int depth, float alpha, float beta) -> float
+    {
+        if (depth == 0)
+            return evaluate();
+
+        auto legal_moves = generate_moves(board);
+
+        for (const auto mv : legal_moves)
+        {
+            board.make_move(mv);
+            float score = -helper(depth - 1, -beta, -alpha);
+            board.undo_move(mv);
+            if (score >= beta)
+                return beta;
+            
+            if (score > alpha)
+                alpha = score;
+        }
+
+        return alpha;
+    };
+
+    Move best_move;
+    auto legal_moves = generate_moves(board);
+    float max = -std::numeric_limits<float>::infinity();
+    for (const auto mv : legal_moves)
+    {
+        board.make_move(mv);
+        float score = helper(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
         board.undo_move(mv);
         if (score > max)
         {
