@@ -233,11 +233,25 @@ std::vector<Move> movegen(Board const &board)
     u64 single_pushes = single_push_targets<c>(pawns, ~occ);
     single_pushes &= check_mask;
     single_pushes &= pinner_rays;
+    constexpr u64 promotion_rank = c == WHITE ? Bitboard::RANK_BB[RANK_8] : Bitboard::RANK_BB[RANK_1];
     while (single_pushes)
     {
         Square to = bitscan(single_pushes);
         Square from = static_cast<Square>(to + 8 * perspective);
-        moves.push_back(Move(from, to));
+
+        // single push is a promotion
+        if (promotion_rank & to)
+        {
+            moves.push_back(Move(from, to, QUEEN_PROMOTION));
+            moves.push_back(Move(from, to, BISHOP_PROMOTION));
+            moves.push_back(Move(from, to, ROOK_PROMOTION));
+            moves.push_back(Move(from, to, KNIGHT_PROMOTION));
+        }
+
+        else
+        {
+            moves.push_back(Move(from, to));
+        }
     }
 
     u64 double_pushes = double_push_targets<c>(pawns, ~occ);
@@ -259,7 +273,20 @@ std::vector<Move> movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.push_back(Move(from, to, CAPTURE));
+
+            // capture is a promotion
+            if (promotion_rank & to)
+            {
+                moves.push_back(Move(from, to, QUEEN_PROMO_CAPTURE));
+                moves.push_back(Move(from, to, BISHOP_PROMO_CAPTURE));
+                moves.push_back(Move(from, to, ROOK_PROMO_CAPTURE));
+                moves.push_back(Move(from, to, KNIGHT_PROMO_CAPTURE));
+            }
+
+            else
+            {
+                moves.push_back(Move(from, to, CAPTURE));
+            }
         }
     }
 
