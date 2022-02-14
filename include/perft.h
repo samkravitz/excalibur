@@ -19,6 +19,7 @@ struct PerftDetail
     int captures          = 0;
     int enpassants        = 0;
     int castles           = 0;
+    int promotions        = 0;
     int checks            = 0;
     int discovered_checks = 0;
     int double_checks     = 0;
@@ -31,6 +32,7 @@ struct PerftDetail
         os << "\tcaptures:          " << pd.captures          << "\n";
         os << "\tenpassants:        " << pd.enpassants        << "\n";
         os << "\tcastles:           " << pd.castles           << "\n";
+        os << "\tpromotions:        " << pd.promotions        << "\n";
         os << "\tchecks:            " << pd.checks            << "\n";
         os << "\tdiscovered_checks: " << pd.discovered_checks << "\n";
         os << "\tdouble_checks:     " << pd.double_checks     << "\n";

@@ -93,6 +93,8 @@ PerftDetail perft_detail(int depth, std::string fen)
                     pd.captures++;
                 if (mv.is_castle())
                     pd.castles++;
+                if (mv.is_promotion())
+                    pd.promotions++;
                 if (mv.flags() == ENPASSANT)
                 {
                     pd.captures++;
