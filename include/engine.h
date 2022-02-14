@@ -21,6 +21,7 @@ public:
     Board board;
 
     float evaluate();
+    std::tuple<Move, float> negamax(int);
     std::tuple<Move, float> best_move();
 
     void parse_uci_moves(std::string const &);

@@ -14,6 +14,7 @@
 #include <cctype>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -46,6 +47,48 @@ float Engine::evaluate()
 
     return eval * perspective;
 }
+
+/**
+ * @brief search a position for the best move using the negamax algorithm
+ * @param depth ply number of ply to search
+ * @return tuple of <best_move, evaluation>
+ */
+std::tuple<Move, float> Engine::negamax(int depth)
+{   
+    std::function<float(int)> helper = [&](int depth) -> float
+    {
+        if (depth == 0)
+            return evaluate();
+        
+        float max = -std::numeric_limits<float>::infinity();
+        auto legal_moves = generate_moves(board);
+        for (const auto mv : legal_moves)
+        {
+            board.make_move(mv);
+            float score = -helper(depth - 1);
+            board.undo_move(mv);
+            if (score > max)
+                max = score;
+        }
+        return max;
+    };
+
+    Move best_move;
+    auto legal_moves = generate_moves(board);
+    float max = -std::numeric_limits<float>::infinity();
+    for (const auto mv : legal_moves)
+    {
+        board.make_move(mv);
+        float score = helper(depth - 1);
+        board.undo_move(mv);
+        if (score > max)
+        {
+            max = score;
+            best_move = mv;
+        }
+    }
+
+    return std::make_tuple(best_move, max);
 }
 
 
