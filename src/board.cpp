@@ -10,11 +10,13 @@
 
 #include "board.h"
 
+#include <bit>
 #include <cassert>
 #include <cstring>
 
 #include "bitboard.h"
 #include "constants.h"
+#include "movegen.h"
 #include "util.h"
 
 /*
@@ -467,4 +469,9 @@ std::string Board::to_string() const
     }
 
     return res;
+}
+
+bool Board::in_check(Color c)
+{
+    return std::popcount(checkers(*this, c)) != 0;
 }

@@ -46,6 +46,7 @@ public:
     void clear();
     void set_piece(PieceType, Square, Color);
     void set_to_move(Color);
+    bool in_check(Color);
 
     // get all pieces on the board
     inline u64 pieces()                      const { return color_bb[WHITE] | color_bb[BLACK]; }
