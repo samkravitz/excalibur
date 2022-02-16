@@ -18,13 +18,14 @@
 
 enum MovegenType
 {
-    LEGAL,
-    PSEUDOLEGAL,
+    ALL,
+    CAPTURES,
 };
 
 Movelist generate_moves(Board const &);
+Movelist generate_captures(Board const &);
 
-template<Color, MovegenType>
+template<Color, MovegenType = ALL>
 Movelist movegen(Board const &);
 
 template <Direction>
@@ -52,4 +53,5 @@ static u64 attack_set(u64, u64);
 
 template <PieceType, Color>
 static u64 attack_set(u64, u64);
+
 u64 checkers(Board const &, Color);

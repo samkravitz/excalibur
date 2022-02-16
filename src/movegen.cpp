@@ -18,7 +18,12 @@
 
 Movelist generate_moves(Board const &board)
 {
-    return board.mover() == WHITE ? movegen<WHITE, LEGAL>(board) : movegen<BLACK, LEGAL>(board);
+    return board.mover() == WHITE ? movegen<WHITE, ALL>(board) : movegen<BLACK, ALL>(board);
+}
+
+Movelist generate_captures(Board const &board)
+{
+    return board.mover() == WHITE ? movegen<WHITE, CAPTURES>(board) : movegen<BLACK, CAPTURES>(board);
 }
 
 template <Color c, MovegenType type>
@@ -40,10 +45,18 @@ Movelist movegen(Board const &board)
 
     Square king_square = board.king_square(c);
 
-    auto make_flags = [&](Square to) -> MoveFlags
+    // rank on which a pawn can promote
+    constexpr u64 promotion_rank = c == WHITE ? Bitboard::RANK_BB[RANK_8] : Bitboard::RANK_BB[RANK_1];
+
+    auto const &piece_on = [&](Square to) -> bool
+    {
+        return board.piece_on(to);
+    };
+
+    auto const &make_flags = [&](Square to) -> MoveFlags
     {
         return board.piece_on(to) == NONE ? QUIET_MOVE : CAPTURE;
-    };
+    };    
 
     // declare variables needed for legal move generation
     u64 occ_without_king;                 // get occupancy set without our king (used for calculating legal moves)
@@ -55,127 +68,124 @@ Movelist movegen(Board const &board)
     u64 pinner_rays = 0xffffffffffffffff; // set of all rays from a pinner to our king (with pinned piece remove)
     bool in_check, in_double_check;
     
-    if constexpr (type == LEGAL)
+    occ_without_king = occ ^ board.pieces(KING, c);
+    opponent_attacks = attack_set<opp_color>(board, occ_without_king);
+    checks = checkers(board, c);
+    in_check = std::popcount(checks) == 1;
+    in_double_check = std::popcount(checks) > 1;
+
+    /*
+    * if we are in single check, we need to calculate what squares we are allowed to move to
+    * (if we are in double check the only legal moves are king moves)
+    * our options to get out of check are as follows:
+    * 1. move the king out of check
+    * 2. capture the checking piece
+    * 3. block the checking piece (if checking piece is a sliding piece)
+    * 
+    * our check_mask from above helps us for 2 and 3
+    * 
+    * https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/
+    */
+    if (in_check)
     {
-        occ_without_king = occ ^ board.pieces(KING, c);
-        opponent_attacks = attack_set<opp_color>(board, occ_without_king);
-        checks = checkers(board, c);
-        in_check = std::popcount(checks) == 1;
-        in_double_check = std::popcount(checks) > 1;
+        // default our moves to only those who capture our checker
+        check_mask = checks;
 
-        /*
-         * if we are in single check, we need to calculate what squares we are allowed to move to
-         * (if we are in double check the only legal moves are king moves)
-         * our options to get out of check are as follows:
-         * 1. move the king out of check
-         * 2. capture the checking piece
-         * 3. block the checking piece (if checking piece is a sliding piece)
-         * 
-         * our check_mask from above helps us for 2 and 3
-         * 
-         * https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/
-         */
-        if (in_check)
+        Square checker_square = bitscan(checks);
+        PieceType checker_piece = board.piece_on(checker_square);
+
+        // checking piece is a sliding piece, so we can attempt to block
+        if (checker_piece == BISHOP || checker_piece == ROOK || checker_piece == QUEEN)
         {
-            // default our moves to only those who capture our checker
-            check_mask = checks;
-
-            Square checker_square = bitscan(checks);
-            PieceType checker_piece = board.piece_on(checker_square);
-
-            // checking piece is a sliding piece, so we can attempt to block
-            if (checker_piece == BISHOP || checker_piece == ROOK || checker_piece == QUEEN)
+            switch (Constants::dir_lookup_table[checker_square][king_square])
             {
-                switch (Constants::dir_lookup_table[checker_square][king_square])
-                {
-                    case NORTH:     check_mask |= ray_attacks<NORTH>(checker_square, occ);     break;
-                    case SOUTH:     check_mask |= ray_attacks<SOUTH>(checker_square, occ);     break;
-                    case EAST:      check_mask |= ray_attacks<EAST>(checker_square, occ);      break;
-                    case WEST:      check_mask |= ray_attacks<WEST>(checker_square, occ);      break;
-                    case NORTHEAST: check_mask |= ray_attacks<NORTHEAST>(checker_square, occ); break;
-                    case NORTHWEST: check_mask |= ray_attacks<NORTHWEST>(checker_square, occ); break;
-                    case SOUTHEAST: check_mask |= ray_attacks<SOUTHEAST>(checker_square, occ); break;
-                    case SOUTHWEST: check_mask |= ray_attacks<SOUTHWEST>(checker_square, occ); break;
-                }
+                case NORTH:     check_mask |= ray_attacks<NORTH>(checker_square, occ);     break;
+                case SOUTH:     check_mask |= ray_attacks<SOUTH>(checker_square, occ);     break;
+                case EAST:      check_mask |= ray_attacks<EAST>(checker_square, occ);      break;
+                case WEST:      check_mask |= ray_attacks<WEST>(checker_square, occ);      break;
+                case NORTHEAST: check_mask |= ray_attacks<NORTHEAST>(checker_square, occ); break;
+                case NORTHWEST: check_mask |= ray_attacks<NORTHWEST>(checker_square, occ); break;
+                case SOUTHEAST: check_mask |= ray_attacks<SOUTHEAST>(checker_square, occ); break;
+                case SOUTHWEST: check_mask |= ray_attacks<SOUTHWEST>(checker_square, occ); break;
+            }
 
-                check_mask ^= king_square;
+            check_mask ^= king_square;
+        }
+    }
+
+    // calculate pinned set
+
+    // get opponent's rook/queen and bishop/queen sets
+    u64 opRQ = board.pieces(ROOK, ~c)   | board.pieces(QUEEN, ~c);
+    u64 opBQ = board.pieces(BISHOP, ~c) | board.pieces(QUEEN, ~c);
+
+    pinners = xray_attacks<ROOK>(occ, our_pieces, king_square) & opRQ;
+    pinners |= xray_attacks<BISHOP>(occ, our_pieces, king_square) & opBQ;
+
+    // if there are pinners, calculate the pinned set
+    if (pinners)
+    {
+        u64 tmp = pinners;
+        while (tmp)
+        {
+            Square from = bitscan(tmp);
+            u64 ray;
+            switch (Constants::dir_lookup_table[from][king_square])
+            {
+                case NORTH:    
+                    ray = ray_attacks<NORTH>(from, occ);
+                    pinned |= bitstcan_cp(ray & our_pieces);
+                    break;
+                case SOUTH:    
+                    ray = ray_attacks<SOUTH>(from, occ);
+                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    break;
+                case EAST:     
+                    ray = ray_attacks<EAST>(from, occ);
+                    pinned |= bitstcan_cp(ray & our_pieces);
+                    break;
+                case WEST:     
+                    ray = ray_attacks<WEST>(from, occ);
+                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    break;
+                case NORTHEAST:
+                    ray = ray_attacks<NORTHEAST>(from, occ);
+                    pinned |= bitstcan_cp(ray & our_pieces);
+                    break;
+                case NORTHWEST:
+                    ray = ray_attacks<NORTHWEST>(from, occ);
+                    pinned |= bitstcan_cp(ray & our_pieces);
+                    break;
+                case SOUTHEAST:
+                    ray = ray_attacks<SOUTHEAST>(from, occ);
+                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    break;
+                case SOUTHWEST:
+                    ray = ray_attacks<SOUTHWEST>(from, occ);
+                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    break;
             }
         }
 
-        // calculate pinned set
+        // calculate pinner rays
+        pinner_rays = 0;
 
-        // get opponent's rook/queen and bishop/queen sets
-        u64 opRQ = board.pieces(ROOK, ~c)   | board.pieces(QUEEN, ~c);
-        u64 opBQ = board.pieces(BISHOP, ~c) | board.pieces(QUEEN, ~c);
-
-        pinners = xray_attacks<ROOK>(occ, our_pieces, king_square) & opRQ;
-        pinners |= xray_attacks<BISHOP>(occ, our_pieces, king_square) & opBQ;
-
-        // if there are pinners, calculate the pinned set
-        if (pinners)
+        // occupancy set exluded our pinned pieces
+        u64 occ_without_pinned = occ ^ pinned;
+        while (pinners)
         {
-            u64 tmp = pinners;
-            while (tmp)
+            Square from = bitscan(pinners);
+            pinner_rays |= from;
+            switch (Constants::dir_lookup_table[from][king_square])
             {
-                Square from = bitscan(tmp);
-                u64 ray;
-                switch (Constants::dir_lookup_table[from][king_square])
-                {
-                    case NORTH:    
-                        ray = ray_attacks<NORTH>(from, occ);
-                        pinned |= bitstcan_cp(ray & our_pieces);
-                        break;
-                    case SOUTH:    
-                        ray = ray_attacks<SOUTH>(from, occ);
-                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
-                        break;
-                    case EAST:     
-                        ray = ray_attacks<EAST>(from, occ);
-                        pinned |= bitstcan_cp(ray & our_pieces);
-                        break;
-                    case WEST:     
-                        ray = ray_attacks<WEST>(from, occ);
-                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
-                        break;
-                    case NORTHEAST:
-                        ray = ray_attacks<NORTHEAST>(from, occ);
-                        pinned |= bitstcan_cp(ray & our_pieces);
-                        break;
-                    case NORTHWEST:
-                        ray = ray_attacks<NORTHWEST>(from, occ);
-                        pinned |= bitstcan_cp(ray & our_pieces);
-                        break;
-                    case SOUTHEAST:
-                        ray = ray_attacks<SOUTHEAST>(from, occ);
-                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
-                        break;
-                    case SOUTHWEST:
-                        ray = ray_attacks<SOUTHWEST>(from, occ);
-                        pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
-                        break;
-                }
-            }
-
-            // calculate pinner rays
-            pinner_rays = 0;
-
-            // occupancy set exluded our pinned pieces
-            u64 occ_without_pinned = occ ^ pinned;
-            while (pinners)
-            {
-                Square from = bitscan(pinners);
-                pinner_rays |= from;
-                switch (Constants::dir_lookup_table[from][king_square])
-                {
-                    case NORTH:     pinner_rays |= ray_attacks<NORTH>(from, occ_without_pinned);     break;
-                    case SOUTH:     pinner_rays |= ray_attacks<SOUTH>(from, occ_without_pinned);     break;
-                    case EAST:      pinner_rays |= ray_attacks<EAST>(from, occ_without_pinned);      break;
-                    case WEST:      pinner_rays |= ray_attacks<WEST>(from, occ_without_pinned);      break;
-                    case NORTHEAST: pinner_rays |= ray_attacks<NORTHEAST>(from, occ_without_pinned); break;
-                    case NORTHWEST: pinner_rays |= ray_attacks<NORTHWEST>(from, occ_without_pinned); break;
-                    case SOUTHEAST: pinner_rays |= ray_attacks<SOUTHEAST>(from, occ_without_pinned); break;
-                    case SOUTHWEST: pinner_rays |= ray_attacks<SOUTHWEST>(from, occ_without_pinned); break;
-                }
+                case NORTH:     pinner_rays |= ray_attacks<NORTH>(from, occ_without_pinned);     break;
+                case SOUTH:     pinner_rays |= ray_attacks<SOUTH>(from, occ_without_pinned);     break;
+                case EAST:      pinner_rays |= ray_attacks<EAST>(from, occ_without_pinned);      break;
+                case WEST:      pinner_rays |= ray_attacks<WEST>(from, occ_without_pinned);      break;
+                case NORTHEAST: pinner_rays |= ray_attacks<NORTHEAST>(from, occ_without_pinned); break;
+                case NORTHWEST: pinner_rays |= ray_attacks<NORTHWEST>(from, occ_without_pinned); break;
+                case SOUTHEAST: pinner_rays |= ray_attacks<SOUTHEAST>(from, occ_without_pinned); break;
+                case SOUTHWEST: pinner_rays |= ray_attacks<SOUTHWEST>(from, occ_without_pinned); break;
             }
         }
     }
@@ -190,65 +200,69 @@ Movelist movegen(Board const &board)
     {
         Square to = bitscan(moves_bb);
 
-        if constexpr (type == LEGAL)
+        if (!(opponent_attacks & to))
         {
-            if (opponent_attacks & to)
-                continue;
-        }
+            if constexpr (type == CAPTURES)
+            {
+                if (piece_on(to))
+                    moves.add({ from, to, CAPTURE });
+            }
 
-        moves.add({ from, to, make_flags(to) });
+            else
+                moves.add({ from, to, make_flags(to) });
+        }
     }
 
     // in double check, only king moves are valid, so we can short circuit here
-    if constexpr (type == LEGAL)
-    {
-        if (in_double_check)
-            return moves;
-    }
+    if (in_double_check)
+        return moves;
 
     // generate castle moves
-    if (!in_check)
+    if constexpr (type != CAPTURES)
     {
-        // check for kingside castle
-        if (board.get_castle_rights(c, KINGSIDE))
+        if (!in_check)
         {
-            constexpr Square s1 = c == WHITE ? F1 : F8;
-            constexpr Square s2 = c == WHITE ? G1 : G8;
+            // check for kingside castle
+            if (board.get_castle_rights(c, KINGSIDE))
+            {
+                constexpr Square s1 = c == WHITE ? F1 : F8;
+                constexpr Square s2 = c == WHITE ? G1 : G8;
 
-            bool castling_impeded_by_check = false;
-            bool castling_impeded_by_piece = false;
+                bool castling_impeded_by_check = false;
+                bool castling_impeded_by_piece = false;
 
-            // castling impeded by check
-            if (opponent_attacks & s1 || opponent_attacks & s2)
-                castling_impeded_by_check = true;
-            
-            // castling impeded by another piece
-            if (occ & s1 || occ & s2)
-                castling_impeded_by_piece = true;
+                // castling impeded by check
+                if (opponent_attacks & s1 || opponent_attacks & s2)
+                    castling_impeded_by_check = true;
+                
+                // castling impeded by another piece
+                if (occ & s1 || occ & s2)
+                    castling_impeded_by_piece = true;
 
-            if (!castling_impeded_by_check && !castling_impeded_by_piece)
-                moves.add({ king_square, s2, KINGSIDE_CASTLE });
-        }
+                if (!castling_impeded_by_check && !castling_impeded_by_piece)
+                    moves.add({ king_square, s2, KINGSIDE_CASTLE });
+            }
 
-        // check for queenside castle
-        if (board.get_castle_rights(c, QUEENSIDE))
-        {
-            constexpr Square s1 = c == WHITE ? D1 : D8;
-            constexpr Square s2 = c == WHITE ? C1 : C8;
+            // check for queenside castle
+            if (board.get_castle_rights(c, QUEENSIDE))
+            {
+                constexpr Square s1 = c == WHITE ? D1 : D8;
+                constexpr Square s2 = c == WHITE ? C1 : C8;
 
-            bool castling_impeded_by_check = false;
-            bool castling_impeded_by_piece = false;
+                bool castling_impeded_by_check = false;
+                bool castling_impeded_by_piece = false;
 
-            // castling impeded by check
-            if (opponent_attacks & s1 || opponent_attacks & s2)
-                castling_impeded_by_check = true;
-            
-            // castling impeded by another piece
-            if (occ & s1 || occ & s2)
-                castling_impeded_by_piece = true;
+                // castling impeded by check
+                if (opponent_attacks & s1 || opponent_attacks & s2)
+                    castling_impeded_by_check = true;
+                
+                // castling impeded by another piece
+                if (occ & s1 || occ & s2)
+                    castling_impeded_by_piece = true;
 
-            if (!castling_impeded_by_check && !castling_impeded_by_piece)
-                moves.add({ king_square, s2, QUEENSIDE_CASTLE });
+                if (!castling_impeded_by_check && !castling_impeded_by_piece)
+                    moves.add({ king_square, s2, QUEENSIDE_CASTLE });
+            }
         }
     }
 
@@ -256,47 +270,51 @@ Movelist movegen(Board const &board)
     u64 pawns = board.pieces(PAWN, c);
     constexpr int perspective = c == WHITE ? -1 : 1;
 
-    u64 single_pushes = single_push_targets<c>(pawns, ~occ);
-    single_pushes &= check_mask;
-    constexpr u64 promotion_rank = c == WHITE ? Bitboard::RANK_BB[RANK_8] : Bitboard::RANK_BB[RANK_1];
-    while (single_pushes)
+    // pawn pushes can never be captures
+    if constexpr (type != CAPTURES)
     {
-        Square to = bitscan(single_pushes);
-        Square from = static_cast<Square>(to + 8 * perspective);
-
-        // check if pawn is pinned and if it's unable to push
-        if (pinned & from && !(pinner_rays & to))
-            continue;
-
-        // single push is a promotion
-        if (promotion_rank & to)
+        u64 single_pushes = single_push_targets<c>(pawns, ~occ);
+        single_pushes &= check_mask;
+        while (single_pushes)
         {
-            moves.add({ from, to, QUEEN_PROMOTION  });
-            moves.add({ from, to, BISHOP_PROMOTION });
-            moves.add({ from, to, ROOK_PROMOTION   });
-            moves.add({ from, to, KNIGHT_PROMOTION });
+            Square to = bitscan(single_pushes);
+            Square from = static_cast<Square>(to + 8 * perspective);
+
+            // check if pawn is pinned and if it's unable to push
+            if (pinned & from && !(pinner_rays & to))
+                continue;
+
+            // single push is a promotion
+            if (promotion_rank & to)
+            {
+                moves.add({ from, to, QUEEN_PROMOTION  });
+                moves.add({ from, to, BISHOP_PROMOTION });
+                moves.add({ from, to, ROOK_PROMOTION   });
+                moves.add({ from, to, KNIGHT_PROMOTION });
+            }
+
+            else
+            {
+                moves.add({ from, to });
+            }
         }
 
-        else
+        u64 double_pushes = double_push_targets<c>(pawns, ~occ);
+        double_pushes &= check_mask;
+        while (double_pushes)
         {
-            moves.add({ from, to });
+            Square to = bitscan(double_pushes);
+            Square from = static_cast<Square>(to + 16 * perspective);
+
+            // check if pawn is pinned and if it's unable to push
+            if (pinned & from && !(pinner_rays & to))
+                continue;
+
+            moves.add({ from, to, DOUBLE_PAWN_PUSH });
         }
     }
 
-    u64 double_pushes = double_push_targets<c>(pawns, ~occ);
-    double_pushes &= check_mask;
-    while (double_pushes)
-    {
-        Square to = bitscan(double_pushes);
-        Square from = static_cast<Square>(to + 16 * perspective);
-
-        // check if pawn is pinned and if it's unable to push
-        if (pinned & from && !(pinner_rays & to))
-            continue;
-
-        moves.add({ from, to, DOUBLE_PAWN_PUSH });
-    }
-
+    // generate pawn captures
     while (pawns)
     {
         Square from = bitscan(pawns);
@@ -391,7 +409,14 @@ Movelist movegen(Board const &board)
         while (moves_bb)
         {
             Square to = bitscan(moves_bb);
-            moves.add({ from, to, make_flags(to) });
+            if constexpr (type == CAPTURES)
+            {
+                if (piece_on(to))
+                    moves.add({ from, to, CAPTURE });
+            }
+
+            else
+                moves.add({ from, to, make_flags(to) });
         }
     }
 
@@ -413,7 +438,14 @@ Movelist movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.add({ from, to, make_flags(to) });
+            if constexpr (type == CAPTURES)
+            {
+                if (piece_on(to))
+                    moves.add({ from, to, CAPTURE });
+            }
+
+            else
+                moves.add({ from, to, make_flags(to) });
         }
     }
 
@@ -435,7 +467,14 @@ Movelist movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.add({ from, to, make_flags(to) });
+            if constexpr (type == CAPTURES)
+            {
+                if (piece_on(to))
+                    moves.add({ from, to, CAPTURE });
+            }
+
+            else
+                moves.add({ from, to, make_flags(to) });
         }
     }
 
@@ -457,7 +496,14 @@ Movelist movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.add({ from, to, make_flags(to) });
+            if constexpr (type == CAPTURES)
+            {
+                if (piece_on(to))
+                    moves.add({ from, to, CAPTURE });
+            }
+
+            else
+                moves.add({ from, to, make_flags(to) });
         }
     }
 
