@@ -146,7 +146,7 @@ void Board::make_move(Move const &move)
 
             // there is an enemy pawn immediately to the left of us
             if (color_bb[~mover()] & piece_bb[PAWN] & one_left)
-                ep_sq = one_left;
+                ep_sq = mover() == WHITE ? static_cast<Square>(to - 8) : static_cast<Square>(to + 8);
         }
 
         // moved pawn is not on H file
@@ -156,7 +156,7 @@ void Board::make_move(Move const &move)
 
             // there is an enemy pawn immediately to the right of us
             if (color_bb[~mover()] & piece_bb[PAWN] & one_right)
-                ep_sq = one_right;
+                ep_sq = mover() == WHITE ? static_cast<Square>(to - 8) : static_cast<Square>(to + 8);
         }
     }
 
