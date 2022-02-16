@@ -16,16 +16,16 @@
 #include "bitboard.h"
 #include "constants.h"
 
-std::vector<Move> generate_moves(Board const &board)
+Movelist generate_moves(Board const &board)
 {
     return board.mover() == WHITE ? movegen<WHITE, LEGAL>(board) : movegen<BLACK, LEGAL>(board);
 }
 
 template <Color c, MovegenType type>
-std::vector<Move> movegen(Board const &board)
+Movelist movegen(Board const &board)
 {
     static_assert(c == WHITE || c == BLACK);
-    std::vector<Move> moves;
+    Movelist moves;
 
     // get occupancy set (all pieces)
     u64 occ = board.pieces();
@@ -196,7 +196,7 @@ std::vector<Move> movegen(Board const &board)
                 continue;
         }
 
-        moves.push_back(Move(from, to, make_flags(to)));
+        moves.add({ from, to, make_flags(to) });
     }
 
     // in double check, only king moves are valid, so we can short circuit here
@@ -227,7 +227,7 @@ std::vector<Move> movegen(Board const &board)
                 castling_impeded_by_piece = true;
 
             if (!castling_impeded_by_check && !castling_impeded_by_piece)
-                moves.push_back(Move(king_square, s2, KINGSIDE_CASTLE));
+                moves.add({ king_square, s2, KINGSIDE_CASTLE });
         }
 
         // check for queenside castle
@@ -248,7 +248,7 @@ std::vector<Move> movegen(Board const &board)
                 castling_impeded_by_piece = true;
 
             if (!castling_impeded_by_check && !castling_impeded_by_piece)
-                moves.push_back(Move(king_square, s2, QUEENSIDE_CASTLE));
+                moves.add({ king_square, s2, QUEENSIDE_CASTLE });
         }
     }
 
@@ -271,15 +271,15 @@ std::vector<Move> movegen(Board const &board)
         // single push is a promotion
         if (promotion_rank & to)
         {
-            moves.push_back(Move(from, to, QUEEN_PROMOTION));
-            moves.push_back(Move(from, to, BISHOP_PROMOTION));
-            moves.push_back(Move(from, to, ROOK_PROMOTION));
-            moves.push_back(Move(from, to, KNIGHT_PROMOTION));
+            moves.add({ from, to, QUEEN_PROMOTION  });
+            moves.add({ from, to, BISHOP_PROMOTION });
+            moves.add({ from, to, ROOK_PROMOTION   });
+            moves.add({ from, to, KNIGHT_PROMOTION });
         }
 
         else
         {
-            moves.push_back(Move(from, to));
+            moves.add({ from, to });
         }
     }
 
@@ -294,7 +294,7 @@ std::vector<Move> movegen(Board const &board)
         if (pinned & from && !(pinner_rays & to))
             continue;
 
-        moves.push_back(Move(from, to, DOUBLE_PAWN_PUSH));
+        moves.add({ from, to, DOUBLE_PAWN_PUSH });
     }
 
     while (pawns)
@@ -313,15 +313,15 @@ std::vector<Move> movegen(Board const &board)
             // capture is a promotion
             if (promotion_rank & to)
             {
-                moves.push_back(Move(from, to, QUEEN_PROMO_CAPTURE));
-                moves.push_back(Move(from, to, BISHOP_PROMO_CAPTURE));
-                moves.push_back(Move(from, to, ROOK_PROMO_CAPTURE));
-                moves.push_back(Move(from, to, KNIGHT_PROMO_CAPTURE));
+                moves.add({ from, to, QUEEN_PROMO_CAPTURE  });
+                moves.add({ from, to, BISHOP_PROMO_CAPTURE });
+                moves.add({ from, to, ROOK_PROMO_CAPTURE   });
+                moves.add({ from, to, KNIGHT_PROMO_CAPTURE });
             }
 
             else
             {
-                moves.push_back(Move(from, to, CAPTURE));
+                moves.add({ from, to, CAPTURE });
             }
         }
     }
@@ -372,7 +372,7 @@ std::vector<Move> movegen(Board const &board)
                     u64 opponent_attacks = attack_set<opp_color>(board, occ_without_pawns);
 
                     if (!(opponent_attacks & king_square))
-                        moves.push_back(Move(from, ep_sq, ENPASSANT));
+                        moves.add({ from, ep_sq, ENPASSANT });
                 }
             }
         }
@@ -391,7 +391,7 @@ std::vector<Move> movegen(Board const &board)
         while (moves_bb)
         {
             Square to = bitscan(moves_bb);
-            moves.push_back(Move(from, to, make_flags(to)));
+            moves.add({ from, to, make_flags(to) });
         }
     }
 
@@ -413,7 +413,7 @@ std::vector<Move> movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.push_back(Move(from, to, make_flags(to)));
+            moves.add({ from, to, make_flags(to) });
         }
     }
 
@@ -435,7 +435,7 @@ std::vector<Move> movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.push_back(Move(from, to, make_flags(to)));
+            moves.add({ from, to, make_flags(to) });
         }
     }
 
@@ -457,7 +457,7 @@ std::vector<Move> movegen(Board const &board)
         while (attacks)
         {
             Square to = bitscan(attacks);
-            moves.push_back(Move(from, to, make_flags(to)));
+            moves.add({ from, to, make_flags(to) });
         }
     }
 

@@ -14,6 +14,7 @@
 
 #include "board.h"
 #include "move.h"
+#include "movelist.h"
 
 enum MovegenType
 {
@@ -21,10 +22,10 @@ enum MovegenType
     PSEUDOLEGAL,
 };
 
-std::vector<Move> generate_moves(Board const &);
+Movelist generate_moves(Board const &);
 
 template<Color, MovegenType>
-std::vector<Move> movegen(Board const &);
+Movelist movegen(Board const &);
 
 template <Direction>
 u64 ray_attacks(Square, u64);
