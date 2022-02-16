@@ -254,6 +254,10 @@ void Engine::parse_uci_move(std::string const &move)
     // check if move is enpassant
     if (!is_capture && board.piece_on(to) == PAWN && (to == static_cast<Square>(from + 7) || to == static_cast<Square>(from + 9) || from == static_cast<Square>(from - 7) || from == static_cast<Square>(to - 9)))
         flags = ENPASSANT;
+    
+    // check if move is double pawn push
+    if (board.piece_on(from) == PAWN && (to == static_cast<Square>(from + 16) || to == static_cast<Square>(from - 16)))
+        flags = DOUBLE_PAWN_PUSH;
 
     Move mv(from, to, flags);
     board.make_move(mv);
