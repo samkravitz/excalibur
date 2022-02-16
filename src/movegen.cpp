@@ -344,8 +344,36 @@ std::vector<Move> movegen(Board const &board)
                 if (pinned & from && !(pinner_rays & to))
                     continue;
                 
+                // the pawn can capture enpassant
                 if (to == ep_sq)
-                    moves.push_back(Move(from, ep_sq, ENPASSANT));
+                {
+                    /*
+                     * the last thing we have to check for is that doing the enpassant capture
+                     * does not inadvertently cause a discovered check.
+                     * 
+                     * we will do this by removing both pawns from the board and seeing if our king is in check.
+                     */
+                    
+                    // square that we are capturing on
+                    auto captured_sq = board.mover() == WHITE ? static_cast<Square>(to - 8) : static_cast<Square>(to + 8);
+
+                    // pawn doing the capture
+                    auto mover = board.piece_on(from);
+
+                    // pawn being captured
+                    auto captured = board.piece_on(captured_sq);
+
+                    // sanity check that both pieces are pawns
+                    assert(mover == PAWN || captured == PAWN);
+
+                    // occupied set without either pawns
+                    u64 occ_without_pawns = occ ^ from ^ captured_sq;
+
+                    u64 opponent_attacks = attack_set<opp_color>(board, occ_without_pawns);
+
+                    if (!(opponent_attacks & king_square))
+                        moves.push_back(Move(from, ep_sq, ENPASSANT));
+                }
             }
         }
     }
