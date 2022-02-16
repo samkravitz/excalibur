@@ -27,15 +27,18 @@
 struct BoardState
 {
     BoardState() = delete;
-    BoardState(bool saved_castle_rights[2][2])
+    BoardState(bool saved_castle_rights[2][2], Square ep_sq)
     {
         castle_rights[0][0] = saved_castle_rights[0][0];
         castle_rights[0][1] = saved_castle_rights[0][1];
         castle_rights[1][0] = saved_castle_rights[1][0];
         castle_rights[1][1] = saved_castle_rights[1][1];
+
+        ep_sq = ep_sq;
     }
     
     bool castle_rights[2][2];
+    Square ep_sq;
 };
 
 class Board

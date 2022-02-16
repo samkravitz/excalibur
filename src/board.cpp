@@ -429,7 +429,7 @@ void Board::undo_move(Move const &move)
 
 void Board::save()
 {
-    BoardState bs(castle_rights);
+    BoardState bs(castle_rights, ep_sq);
     saved_state.push(bs);
 }
 
@@ -441,6 +441,7 @@ void Board::restore()
     castle_rights[0][1] = state.castle_rights[0][1];
     castle_rights[1][0] = state.castle_rights[1][0];
     castle_rights[1][1] = state.castle_rights[1][1];
+    ep_sq = state.ep_sq;
     saved_state.pop();
 }
 
