@@ -91,7 +91,7 @@ void parse_uci_move(std::string const &move)
     }
 
     // check if move is enpassant
-    if (!is_capture && board.piece_on(to) == PAWN && (to == static_cast<Square>(from + 7) || to == static_cast<Square>(from + 9) || from == static_cast<Square>(from - 7) || from == static_cast<Square>(to - 9)))
+    if (board.piece_on(from) == PAWN && to == board.get_ep_sq())
         flags = ENPASSANT;
     
     // check if move is double pawn push
