@@ -35,16 +35,16 @@ int perft(int depth, std::string fen)
     std::function<int(int)> helper = [&](int depth) -> int
     {
         int nodes = 0;
-        auto legal_moves = generate_moves(engine.board);
+        auto legal_moves = generate_moves();
 
         if (depth == 1)
             return legal_moves.size();
 
         for (auto mv : legal_moves)
         {
-            engine.board.make_move(mv);
+            board.make_move(mv);
             nodes += helper(depth - 1);
-            engine.board.undo_move(mv);
+            board.undo_move(mv);
         }
         return nodes;
     };
@@ -70,11 +70,11 @@ PerftDetail perft_detail(int depth, std::string fen)
     std::function<int(int)> helper = [&](int depth) -> int
     {
         int nodes = 0;
-        auto legal_moves = generate_moves(engine.board);
+        auto legal_moves = generate_moves();
 
         if (depth == 0)
         {
-            if (engine.board.in_check(engine.board.mover()))
+            if (board.in_check(board.mover()))
             {
                 pd.checks++;
 
@@ -101,9 +101,9 @@ PerftDetail perft_detail(int depth, std::string fen)
                     pd.enpassants++;
                 }
             }
-            engine.board.make_move(mv);
+            board.make_move(mv);
             nodes += helper(depth - 1);
-            engine.board.undo_move(mv);
+            board.undo_move(mv);
         }
 
         return nodes;

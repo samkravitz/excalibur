@@ -62,7 +62,7 @@ std::tuple<Move, float> Engine::negamax(int depth)
             return evaluate();
         
         float max = -std::numeric_limits<float>::infinity();
-        auto legal_moves = generate_moves(board);
+        auto legal_moves = generate_moves();
         for (const auto mv : legal_moves)
         {
             board.make_move(mv);
@@ -75,7 +75,7 @@ std::tuple<Move, float> Engine::negamax(int depth)
     };
 
     Move best_move;
-    auto legal_moves = generate_moves(board);
+    auto legal_moves = generate_moves();
     float max = -std::numeric_limits<float>::infinity();
     for (const auto mv : legal_moves)
     {
@@ -104,7 +104,7 @@ std::tuple<Move, float> Engine::alphabeta(int depth)
         if (depth == 0)
             return evaluate();
 
-        auto legal_moves = generate_moves(board);
+        auto legal_moves = generate_moves();
 
         for (const auto mv : legal_moves)
         {
@@ -122,7 +122,7 @@ std::tuple<Move, float> Engine::alphabeta(int depth)
     };
 
     Move best_move;
-    auto legal_moves = generate_moves(board);
+    auto legal_moves = generate_moves();
     float max = -std::numeric_limits<float>::infinity();
     for (const auto mv : legal_moves)
     {
@@ -146,7 +146,7 @@ std::tuple<Move, float> Engine::alphabeta(int depth)
  */
 std::tuple<Move, float> Engine::best_move()
 {
-    auto legal_moves = generate_moves(board);
+    auto legal_moves = generate_moves();
     Color to_move = board.mover();
     auto best_evalutation = to_move == WHITE ? -1000 : 1000;
     std::vector<std::tuple<Move, float>> considered_moves;

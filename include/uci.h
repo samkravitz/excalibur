@@ -14,6 +14,10 @@
 
 #include <string>
 
+// global board object
+class Board;
+extern Board board;
+
 // Types of messages GUI can send to engine
 enum UciType
 {

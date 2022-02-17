@@ -477,5 +477,5 @@ std::string Board::to_string() const
 
 bool Board::in_check(Color c)
 {
-    return std::popcount(checkers(*this, c)) != 0;
+    return std::popcount(checkers(c)) != 0;
 }

@@ -23,6 +23,10 @@
 #include "util.h"
 #include "types.h"
 
+// global board object
+class Board;
+extern Board board;
+
 struct Move
 {
 public:

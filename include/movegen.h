@@ -12,7 +12,6 @@
 
 #include <vector>
 
-#include "board.h"
 #include "move.h"
 #include "movelist.h"
 
@@ -22,11 +21,11 @@ enum MovegenType
     CAPTURES,
 };
 
-Movelist generate_moves(Board const &);
-Movelist generate_captures(Board const &);
+Movelist generate_moves();
+Movelist generate_captures();
 
 template<Color, MovegenType = ALL>
-Movelist movegen(Board const &);
+Movelist movegen();
 
 template <Direction>
 u64 ray_attacks(Square, u64);
@@ -54,4 +53,4 @@ static u64 attack_set(u64, u64);
 template <PieceType, Color>
 static u64 attack_set(u64, u64);
 
-u64 checkers(Board const &, Color);
+u64 checkers(Color);

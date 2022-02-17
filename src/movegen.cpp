@@ -14,20 +14,24 @@
 #include <iostream>
 
 #include "bitboard.h"
+#include "board.h"
 #include "constants.h"
 
-Movelist generate_moves(Board const &board)
+// global board object
+extern Board board;
+
+Movelist generate_moves()
 {
-    return board.mover() == WHITE ? movegen<WHITE, ALL>(board) : movegen<BLACK, ALL>(board);
+    return board.mover() == WHITE ? movegen<WHITE, ALL>() : movegen<BLACK, ALL>();
 }
 
-Movelist generate_captures(Board const &board)
+Movelist generate_captures()
 {
-    return board.mover() == WHITE ? movegen<WHITE, CAPTURES>(board) : movegen<BLACK, CAPTURES>(board);
+    return board.mover() == WHITE ? movegen<WHITE, CAPTURES>() : movegen<BLACK, CAPTURES>();
 }
 
 template <Color c, MovegenType type>
-Movelist movegen(Board const &board)
+Movelist movegen()
 {
     static_assert(c == WHITE || c == BLACK);
     Movelist moves;
@@ -70,7 +74,7 @@ Movelist movegen(Board const &board)
     
     occ_without_king = occ ^ board.pieces(KING, c);
     opponent_attacks = attack_set<opp_color>(board, occ_without_king);
-    checks = checkers(board, c);
+    checks = checkers(c);
     in_check = std::popcount(checks) == 1;
     in_double_check = std::popcount(checks) > 1;
 
@@ -662,11 +666,10 @@ static u64 attack_set(u64 piece_set, u64 occupied)
 
 /**
  * @brief calculates the set of all attackers to a color's king
- * @param board the board
  * @param c the color of the king we are checking
  * @return the set of all squares attacking c's king
  */
-u64 checkers(Board const &board, Color c)
+u64 checkers(Color c)
 {
     u64 attackers = 0;
 

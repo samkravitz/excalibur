@@ -8,7 +8,11 @@
  * DESCRIPTION: main()
  */
 
+#include "board.h"
 #include "uci.h"
+
+// global board object
+Board board;
 
 int main(int argc, char **argv)
 {

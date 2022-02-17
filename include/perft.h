@@ -13,6 +13,10 @@
 #include <iostream>
 #include <string>
 
+// global board object
+class Board;
+extern Board board;
+
 struct PerftDetail
 {
     int nodes             = 0;

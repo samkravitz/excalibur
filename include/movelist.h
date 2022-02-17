@@ -14,6 +14,10 @@
 
 #include "move.h"
 
+// global board object
+class Board;
+extern Board board;
+
 constexpr std::size_t N_MOVES = 256;
 
 class Movelist
