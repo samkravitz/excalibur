@@ -16,7 +16,8 @@
 
 #include <functional>
 
-#include "engine.h"
+#include "board.h"
+#include "game.h"
 #include "movegen.h"
 
 /**
@@ -27,10 +28,8 @@
  */
 int perft(int depth, std::string fen)
 {
-    Engine engine;
-
     if (fen != "")
-        engine.load_fen(fen);
+        load_fen(fen);
     
     std::function<int(int)> helper = [&](int depth) -> int
     {
@@ -60,10 +59,8 @@ int perft(int depth, std::string fen)
  */
 PerftDetail perft_detail(int depth, std::string fen)
 {
-    Engine engine;
-
     if (fen != "")
-        engine.load_fen(fen);
+        load_fen(fen);
     
     PerftDetail pd;
     

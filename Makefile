@@ -5,7 +5,6 @@ SOURCE = src
 INCLUDE = include
 OBJ = \
 	board.o \
-	engine.o \
 	game.o \
 	movegen.o \
 	movelist.o \
