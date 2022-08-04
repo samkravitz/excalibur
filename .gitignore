@@ -1,4 +1,3 @@
-.vscode/
-bin/
+*.o
 excalibur
 node_modules
