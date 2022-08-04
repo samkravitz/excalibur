@@ -58,6 +58,14 @@ float alphabeta(int depth, float alpha, float beta)
     for (const auto mv : legal_moves)
     {
         board.make_move(mv);
+
+		// board is invalid, so this must be very bad for us
+		if (board.pieces(KING, board.mover()) == 0)
+		{
+			board.undo_move(mv);
+			return -20000;
+		}
+
         float score = -alphabeta(depth - 1, -beta, -alpha);
         board.undo_move(mv);
         if (score >= beta)
