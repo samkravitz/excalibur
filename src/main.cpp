@@ -8,15 +8,29 @@
  * DESCRIPTION: main()
  */
 
+#include <iostream>
+
 #include "board.h"
+#include "game.h"
 #include "uci.h"
+#include "search.h"
 
 // global board object
 Board board;
 
 int main(int argc, char **argv)
 {
-    // launch uci handler
-    uci();
-    return 0;
+	if (argc == 1)
+	{
+		uci();
+		return 0;
+	}
+
+	for (int i = 1; i < argc; ++i)
+		parse_uci_move(std::string(argv[i]));
+
+	const auto [move, eval] = search(5);
+
+	std::cout << move << "\n";
+	return 0;
 }
