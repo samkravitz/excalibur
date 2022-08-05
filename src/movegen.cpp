@@ -138,35 +138,35 @@ Movelist movegen()
             {
                 case NORTH:    
                     ray = ray_attacks<NORTH>(from, occ);
-                    pinned |= bitstcan_cp(ray & our_pieces);
+                    pinned |= bitscan_cp(ray & our_pieces);
                     break;
                 case SOUTH:    
                     ray = ray_attacks<SOUTH>(from, occ);
-                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    pinned |= bitscan_cp<REVERSE>(ray & our_pieces);
                     break;
                 case EAST:     
                     ray = ray_attacks<EAST>(from, occ);
-                    pinned |= bitstcan_cp(ray & our_pieces);
+                    pinned |= bitscan_cp(ray & our_pieces);
                     break;
                 case WEST:     
                     ray = ray_attacks<WEST>(from, occ);
-                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    pinned |= bitscan_cp<REVERSE>(ray & our_pieces);
                     break;
                 case NORTHEAST:
                     ray = ray_attacks<NORTHEAST>(from, occ);
-                    pinned |= bitstcan_cp(ray & our_pieces);
+                    pinned |= bitscan_cp(ray & our_pieces);
                     break;
                 case NORTHWEST:
                     ray = ray_attacks<NORTHWEST>(from, occ);
-                    pinned |= bitstcan_cp(ray & our_pieces);
+                    pinned |= bitscan_cp(ray & our_pieces);
                     break;
                 case SOUTHEAST:
                     ray = ray_attacks<SOUTHEAST>(from, occ);
-                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    pinned |= bitscan_cp<REVERSE>(ray & our_pieces);
                     break;
                 case SOUTHWEST:
                     ray = ray_attacks<SOUTHWEST>(from, occ);
-                    pinned |= bitstcan_cp<REVERSE>(ray & our_pieces);
+                    pinned |= bitscan_cp<REVERSE>(ray & our_pieces);
                     break;
             }
         }

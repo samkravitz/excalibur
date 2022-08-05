@@ -47,7 +47,7 @@ Square bitscan(u64 &bitboard)
 
 // just like the other bitscan except it doesn't modify its argument
 template<BitscanDirection d = FORWARD>
-Square bitstcan_cp(u64 bitboard)
+Square bitscan_cp(u64 bitboard)
 {
     static_assert(d == FORWARD || d == REVERSE);
     assert(bitboard != 0);
