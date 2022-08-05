@@ -12,8 +12,8 @@
 
 #include "board.h"
 #include "game.h"
-#include "uci.h"
 #include "search.h"
+#include "uci.h"
 
 // global board object
 Board board;

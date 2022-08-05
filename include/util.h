@@ -18,19 +18,19 @@
 
 namespace Util
 {
-    std::tuple <int, int> rank_file_from_square(Square);
-    Square square_from_rank_file(int, int);
-    std::string to_algebraic(Square);
-    Square from_algebraic(std::string const &);
-    void print_bitboard(u64);
+	std::tuple<int, int> rank_file_from_square(Square);
+	Square square_from_rank_file(int, int);
+	std::string to_algebraic(Square);
+	Square from_algebraic(std::string const &);
+	void print_bitboard(u64);
 
-    template <typename T>
-    T get_random_element(std::vector<T> const &vec)
-    {
-        std::random_device dev;
-        std::mt19937 rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> uni(0, vec.size() - 1);
+	template<typename T>
+	T get_random_element(std::vector<T> const &vec)
+	{
+		std::random_device dev;
+		std::mt19937 rng(dev());
+		std::uniform_int_distribution<std::mt19937::result_type> uni(0, vec.size() - 1);
 
-        return vec[uni(rng)];
-    }
+		return vec[uni(rng)];
+	}
 }

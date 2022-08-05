@@ -11,10 +11,10 @@
 
 Movelist::Movelist()
 {
-    m_size = 0;
+	m_size = 0;
 }
 
 void Movelist::add(Move mv)
 {
-    movelist[m_size++] = mv;
+	movelist[m_size++] = mv;
 }

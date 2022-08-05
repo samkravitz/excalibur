@@ -17,8 +17,8 @@
 
 enum MovegenType
 {
-    ALL,
-    CAPTURES,
+	ALL,
+	CAPTURES,
 };
 
 Movelist generate_moves();

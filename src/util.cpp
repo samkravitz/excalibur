@@ -21,11 +21,11 @@
  * example invocation:
  * auto [rank, file] = rank_file_from_square(11) => [1, 3]
  */
-std::tuple <int, int> Util::rank_file_from_square(Square square)
+std::tuple<int, int> Util::rank_file_from_square(Square square)
 {
-    int rank = square / 8;
-    int file = square % 8;
-    return std::make_tuple(rank, file); 
+	int rank = square / 8;
+	int file = square % 8;
+	return std::make_tuple(rank, file);
 }
 
 /**
@@ -41,7 +41,7 @@ std::tuple <int, int> Util::rank_file_from_square(Square square)
  */
 Square Util::square_from_rank_file(int rank, int file)
 {
-    return Square(rank * 8 + file);
+	return Square(rank * 8 + file);
 }
 
 /**
@@ -54,11 +54,11 @@ Square Util::square_from_rank_file(int rank, int file)
  */
 std::string Util::to_algebraic(Square square)
 {
-    std::string res = "";
-    auto [rank, file] = rank_file_from_square(square);
-    res += file + 'a';
-    res += std::to_string(rank + 1);
-    return res;    
+	std::string res   = "";
+	auto [rank, file] = rank_file_from_square(square);
+	res += file + 'a';
+	res += std::to_string(rank + 1);
+	return res;
 }
 
 /**
@@ -73,21 +73,21 @@ std::string Util::to_algebraic(Square square)
  */
 Square Util::from_algebraic(std::string const &square)
 {
-    int file = square.at(0) - 'a';
-    int rank = square.at(1) - '1';
-    return square_from_rank_file(rank, file);
+	int file = square.at(0) - 'a';
+	int rank = square.at(1) - '1';
+	return square_from_rank_file(rank, file);
 }
 
 void Util::print_bitboard(u64 bitboard)
 {
-    for (int rank = RANK_8; rank >= RANK_1; --rank)
-    {
-        for (int file = FILE_A; file <= FILE_H; ++file)
-        {
-            Square s = static_cast<Square>(rank * 8 + file);
-            char c = bitboard & s ? '1' : '*';
-            std::cout << c << ' ';
-        }
-        std::cout << '\n';
-    }
+	for (int rank = RANK_8; rank >= RANK_1; --rank)
+	{
+		for (int file = FILE_A; file <= FILE_H; ++file)
+		{
+			Square s = static_cast<Square>(rank * 8 + file);
+			char c = bitboard & s ? '1' : '*';
+			std::cout << c << ' ';
+		}
+		std::cout << '\n';
+	}
 }

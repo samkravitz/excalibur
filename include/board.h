@@ -26,78 +26,80 @@
 // irreversable aspects of a position, like enpassant state, castling rights, and halfmove clock
 struct BoardState
 {
-    BoardState() = delete;
-    BoardState(bool saved_castle_rights[2][2], Square ep_sq)
-    {
-        castle_rights[0][0] = saved_castle_rights[0][0];
-        castle_rights[0][1] = saved_castle_rights[0][1];
-        castle_rights[1][0] = saved_castle_rights[1][0];
-        castle_rights[1][1] = saved_castle_rights[1][1];
+	BoardState() = delete;
+	BoardState(bool saved_castle_rights[2][2], Square ep_sq)
+	{
+		castle_rights[0][0] = saved_castle_rights[0][0];
+		castle_rights[0][1] = saved_castle_rights[0][1];
+		castle_rights[1][0] = saved_castle_rights[1][0];
+		castle_rights[1][1] = saved_castle_rights[1][1];
 
-        ep_sq = ep_sq;
-    }
-    
-    bool castle_rights[2][2];
-    Square ep_sq;
+		ep_sq = ep_sq;
+	}
+
+	bool castle_rights[2][2];
+	Square ep_sq;
 };
 
 class Board
 {
 public:
-    Board();
+	Board();
 
-    void clear();
-    void set_piece(PieceType, Square, Color);
-    void set_to_move(Color);
-    bool in_check(Color);
+	void clear();
+	void set_piece(PieceType, Square, Color);
+	void set_to_move(Color);
+	bool in_check(Color);
 
-    // get all pieces on the board
-    inline u64 pieces()                      const { return color_bb[WHITE] | color_bb[BLACK]; }
-    // get all pieces of a certain color
-    inline u64 pieces(Color c)               const { return color_bb[c]; }
-    // get all pieces of a certain type
-    inline u64 pieces(PieceType pt)          const { return piece_bb[pt]; }
-    // get all pieces of a certain color and type
-    inline u64 pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
+	// get all pieces on the board
+	inline u64 pieces()                      const { return color_bb[WHITE] | color_bb[BLACK]; }
+	// get all pieces of a certain color
+	inline u64 pieces(Color c)               const { return color_bb[c]; }
+	// get all pieces of a certain type
+	inline u64 pieces(PieceType pt)          const { return piece_bb[pt]; }
+	// get all pieces of a certain color and type
+	inline u64 pieces(PieceType pt, Color c) const { return piece_bb[pt] & color_bb[c]; }
 
-    inline bool get_castle_rights(Color c, CastleTypes ct) const { return castle_rights[c][ct]; }
-    inline void set_castle_rights(Color c, CastleTypes ct) { castle_rights[c][ct] = true; }
+	inline bool get_castle_rights(Color c, CastleTypes ct) const { return castle_rights[c][ct]; }
+	inline void set_castle_rights(Color c, CastleTypes ct) { castle_rights[c][ct] = true; }
 
-    inline Square get_ep_sq() const { return ep_sq; }
-    inline void set_ep_sq(Square sq) { ep_sq = sq; }
+	inline Square get_ep_sq() const { return ep_sq; }
+	inline void set_ep_sq(Square sq) { ep_sq = sq; }
 
-    inline Square king_square(Color c) const
-    {
-        u64 king = piece_bb[KING] & color_bb[c];
-        return bitscan(king);
-    }
+	inline Square king_square(Color c) const
+	{
+		u64 king = piece_bb[KING] & color_bb[c];
+		return bitscan(king);
+	}
 
-    inline Color mover() const { return to_move; }
-    inline PieceType piece_on(Square square) const { return board[square]; }
+	inline Color mover() const { return to_move; }
+	inline PieceType piece_on(Square square) const { return board[square]; }
 
-    void make_move(Move const &);
-    void undo_move(Move const &);
+	void make_move(Move const &);
+	void undo_move(Move const &);
 
-    std::string to_string() const;
-    friend std::ostream &operator<<(std::ostream &os, Board const &b)
-    {
-        os << b.to_string();
-        return os;
-    }
+	std::string to_string() const;
+	friend std::ostream &operator<<(std::ostream &os, Board const &b)
+	{
+		os << b.to_string();
+		return os;
+	}
+
 private:
-    u64 piece_bb[6];
-    u64 color_bb[2];
-    bool castle_rights[2][2];
-    Square ep_sq; // enpassant square
-    std::stack<BoardState> saved_state;
-    PieceType board[64];
 
-    // type of the most recently captured pieces (used for undo move)
-    std::stack<PieceType> capture_stack;
+	u64 piece_bb[6];
+	u64 color_bb[2];
+	bool castle_rights[2][2];
+	Square ep_sq;    // enpassant square
+	std::stack<BoardState> saved_state;
+	PieceType board[64];
 
-    Color to_move;
+	// type of the most recently captured pieces (used for undo move)
+	std::stack<PieceType> capture_stack;
 
-    void reset();
-    void save();
-    void restore();
+	Color to_move;
+
+	void reset();
+	void save();
+	void restore();
 };

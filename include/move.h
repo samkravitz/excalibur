@@ -20,8 +20,8 @@
 
 #include <iostream>
 
-#include "util.h"
 #include "types.h"
+#include "util.h"
 
 // global board object
 class Board;
@@ -30,55 +30,55 @@ extern Board board;
 struct Move
 {
 public:
-    Move(Square from, Square to, MoveFlags flags = QUIET_MOVE)
-    {
-        move_enc = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f);
-    }
+	Move(Square from, Square to, MoveFlags flags = QUIET_MOVE)
+	{
+		move_enc = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f);
+	}
 
-    Move() { move_enc = 0; }
+	Move() { move_enc = 0; }
 
-    Move(int from, int to) : Move(static_cast<Square>(from), static_cast<Square>(to)) { }
+	Move(int from, int to) : Move(static_cast<Square>(from), static_cast<Square>(to)) { }
 
-    inline Square to()       const { return Square(move_enc >> 0 & 0x3f); }
-    inline Square from()     const { return Square(move_enc >> 6 & 0x3f); }
-    inline MoveFlags flags() const { return MoveFlags(move_enc >> 12 & 0xf); }
+	inline Square to()       const { return Square(move_enc >> 0 & 0x3f); }
+	inline Square from()     const { return Square(move_enc >> 6 & 0x3f); }
+	inline MoveFlags flags() const { return MoveFlags(move_enc >> 12 & 0xf); }
 
-    inline bool is_castle()     const { return ((flags() == KINGSIDE_CASTLE) || (flags() == QUEENSIDE_CASTLE)); }
-    inline bool is_promotion()  const { return move_enc >> 12 & 0x8; }
-    inline bool is_capture()    const { return flags() == ENPASSANT ? false : move_enc >> 12 & 0x4; }
+	inline bool is_castle()    const { return ((flags() == KINGSIDE_CASTLE) || (flags() == QUEENSIDE_CASTLE)); }
+	inline bool is_promotion() const { return move_enc >> 12 & 0x8; }
+	inline bool is_capture()   const { return flags() == ENPASSANT ? false : move_enc >> 12 & 0x4; }
 
-    friend std::ostream &operator<<(std::ostream &os, const Move &mv)
-    {
-        std::string promo = "";
-        if (mv.is_promotion())
-        {
-            switch (mv.flags())
-            {
-                case QUEEN_PROMOTION:
-                case QUEEN_PROMO_CAPTURE:
-                    promo = "q";
-                    break;
-                
-                case KNIGHT_PROMOTION:
-                case KNIGHT_PROMO_CAPTURE:
-                    promo = "n";
-                    break;
+	friend std::ostream &operator<<(std::ostream &os, const Move &mv)
+	{
+		std::string promo = "";
+		if (mv.is_promotion())
+		{
+			switch (mv.flags())
+			{
+				case QUEEN_PROMOTION:
+				case QUEEN_PROMO_CAPTURE:
+					promo = "q";
+					break;
 
-                case ROOK_PROMOTION:
-                case ROOK_PROMO_CAPTURE:
-                    promo = "r";
-                    break;
+				case KNIGHT_PROMOTION:
+				case KNIGHT_PROMO_CAPTURE:
+					promo = "n";
+					break;
 
-                case BISHOP_PROMOTION:
-                case BISHOP_PROMO_CAPTURE:
-                    promo = "b";
-                    break;
-            }
-        }
-        os << Util::to_algebraic(mv.from()) << Util::to_algebraic(mv.to()) << promo;
-        return os;
-    }
+				case ROOK_PROMOTION:
+				case ROOK_PROMO_CAPTURE:
+					promo = "r";
+					break;
+
+				case BISHOP_PROMOTION:
+				case BISHOP_PROMO_CAPTURE:
+					promo = "b";
+					break;
+			}
+		}
+		os << Util::to_algebraic(mv.from()) << Util::to_algebraic(mv.to()) << promo;
+		return os;
+	}
 
 private:
-    u16 move_enc;
+	u16 move_enc;
 };

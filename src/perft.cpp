@@ -28,27 +28,27 @@
  */
 int perft(int depth, std::string fen)
 {
-    if (fen != "")
-        load_fen(fen);
-    
-    std::function<int(int)> helper = [&](int depth) -> int
-    {
-        int nodes = 0;
-        auto legal_moves = generate_moves();
+	if (fen != "")
+		load_fen(fen);
 
-        if (depth == 1)
-            return legal_moves.size();
+	std::function<int(int)> helper = [&](int depth) -> int
+	{
+		int nodes        = 0;
+		auto legal_moves = generate_moves();
 
-        for (auto mv : legal_moves)
-        {
-            board.make_move(mv);
-            nodes += helper(depth - 1);
-            board.undo_move(mv);
-        }
-        return nodes;
-    };
+		if (depth == 1)
+			return legal_moves.size();
 
-    return helper(depth);
+		for (auto mv : legal_moves)
+		{
+			board.make_move(mv);
+			nodes += helper(depth - 1);
+			board.undo_move(mv);
+		}
+		return nodes;
+	};
+
+	return helper(depth);
 }
 
 /**
@@ -59,53 +59,53 @@ int perft(int depth, std::string fen)
  */
 PerftDetail perft_detail(int depth, std::string fen)
 {
-    if (fen != "")
-        load_fen(fen);
-    
-    PerftDetail pd;
-    
-    std::function<int(int)> helper = [&](int depth) -> int
-    {
-        int nodes = 0;
-        auto legal_moves = generate_moves();
+	if (fen != "")
+		load_fen(fen);
 
-        if (depth == 0)
-        {
-            if (board.in_check(board.mover()))
-            {
-                pd.checks++;
+	PerftDetail pd;
 
-                if (legal_moves.size() == 0)
-                    pd.checkmates++;
-            }
+	std::function<int(int)> helper = [&](int depth) -> int
+	{
+		int nodes        = 0;
+		auto legal_moves = generate_moves();
 
-            return 1;
-        }
+		if (depth == 0)
+		{
+			if (board.in_check(board.mover()))
+			{
+				pd.checks++;
 
-        for (auto mv : legal_moves)
-        {
-            if (depth == 1)
-            {
-                if (mv.is_capture())
-                    pd.captures++;
-                if (mv.is_castle())
-                    pd.castles++;
-                if (mv.is_promotion())
-                    pd.promotions++;
-                if (mv.flags() == ENPASSANT)
-                {
-                    pd.captures++;
-                    pd.enpassants++;
-                }
-            }
-            board.make_move(mv);
-            nodes += helper(depth - 1);
-            board.undo_move(mv);
-        }
+				if (legal_moves.size() == 0)
+					pd.checkmates++;
+			}
 
-        return nodes;
-    };
+			return 1;
+		}
 
-    pd.nodes = helper(depth);
-    return pd;
+		for (auto mv : legal_moves)
+		{
+			if (depth == 1)
+			{
+				if (mv.is_capture())
+					pd.captures++;
+				if (mv.is_castle())
+					pd.castles++;
+				if (mv.is_promotion())
+					pd.promotions++;
+				if (mv.flags() == ENPASSANT)
+				{
+					pd.captures++;
+					pd.enpassants++;
+				}
+			}
+			board.make_move(mv);
+			nodes += helper(depth - 1);
+			board.undo_move(mv);
+		}
+
+		return nodes;
+	};
+
+	pd.nodes = helper(depth);
+	return pd;
 }

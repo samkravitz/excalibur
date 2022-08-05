@@ -25,22 +25,22 @@
  * @return evaluation
  */
 float negamax(int depth, float alpha, float beta)
-{   
-    if (depth == 0)
-        return evaluate();
-    
-    float max = -std::numeric_limits<float>::infinity();
-    auto legal_moves = generate_moves();
-    for (const auto mv : legal_moves)
-    {
-        board.make_move(mv);
-        float score = -negamax(depth - 1, 0, 0);
-        board.undo_move(mv);
-        if (score > max)
-            max = score;
-    }
+{
+	if (depth == 0)
+		return evaluate();
 
-    return max;
+	float max = -std::numeric_limits<float>::infinity();
+	auto legal_moves = generate_moves();
+	for (const auto mv : legal_moves)
+	{
+		board.make_move(mv);
+		float score = -negamax(depth - 1, 0, 0);
+		board.undo_move(mv);
+		if (score > max)
+			max = score;
+	}
+
+	return max;
 }
 
 /**
@@ -50,14 +50,14 @@ float negamax(int depth, float alpha, float beta)
  */
 float alphabeta(int depth, float alpha, float beta)
 {
-    if (depth == 0)
-        return evaluate();
+	if (depth == 0)
+		return evaluate();
 
-    auto legal_moves = generate_moves();
+	auto legal_moves = generate_moves();
 
-    for (const auto mv : legal_moves)
-    {
-        board.make_move(mv);
+	for (const auto mv : legal_moves)
+	{
+		board.make_move(mv);
 
 		// board is invalid, so this must be very bad for us
 		if (board.pieces(KING, board.mover()) == 0)
@@ -66,16 +66,16 @@ float alphabeta(int depth, float alpha, float beta)
 			return -20000;
 		}
 
-        float score = -alphabeta(depth - 1, -beta, -alpha);
-        board.undo_move(mv);
-        if (score >= beta)
-            return beta;
-        
-        if (score > alpha)
-            alpha = score;
-    }
+		float score = -alphabeta(depth - 1, -beta, -alpha);
+		board.undo_move(mv);
+		if (score >= beta)
+			return beta;
 
-    return alpha;
+		if (score > alpha)
+			alpha = score;
+	}
+
+	return alpha;
 };
 
 /**
@@ -86,24 +86,24 @@ float alphabeta(int depth, float alpha, float beta)
  */
 std::tuple<Move, float> search(int depth, std::function<float(int, float, float)> f)
 {
-    Move best_move;
-    auto legal_moves = generate_moves();
-    float max = -std::numeric_limits<float>::infinity();
+	Move best_move;
+	auto legal_moves = generate_moves();
+	float max = -std::numeric_limits<float>::infinity();
 
-    for (const auto mv : legal_moves)
-    {
-        board.make_move(mv);
-        float score = -f(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
-        board.undo_move(mv);
-        
-        if (score > max)
-        {
-            max = score;
-            best_move = mv;
-        }
-    }
+	for (const auto mv : legal_moves)
+	{
+		board.make_move(mv);
+		float score = -f(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+		board.undo_move(mv);
 
-    return std::make_tuple(best_move, max);
+		if (score > max)
+		{
+			max = score;
+			best_move = mv;
+		}
+	}
+
+	return std::make_tuple(best_move, max);
 }
 
 /**
@@ -113,21 +113,21 @@ std::tuple<Move, float> search(int depth, std::function<float(int, float, float)
  */
 float evaluate()
 {
-    float eval = 0.0f;
+	float eval = 0.0f;
 
-    eval += std::popcount(board.pieces(PAWN, WHITE))   * Constants::PIECE_VALUE[PAWN];
-    eval += std::popcount(board.pieces(KNIGHT, WHITE)) * Constants::PIECE_VALUE[KNIGHT];
-    eval += std::popcount(board.pieces(BISHOP, WHITE)) * Constants::PIECE_VALUE[BISHOP];
-    eval += std::popcount(board.pieces(ROOK, WHITE))   * Constants::PIECE_VALUE[ROOK];
-    eval += std::popcount(board.pieces(QUEEN, WHITE))  * Constants::PIECE_VALUE[QUEEN];
+	eval += std::popcount(board.pieces(PAWN, WHITE)) * Constants::PIECE_VALUE[PAWN];
+	eval += std::popcount(board.pieces(KNIGHT, WHITE)) * Constants::PIECE_VALUE[KNIGHT];
+	eval += std::popcount(board.pieces(BISHOP, WHITE)) * Constants::PIECE_VALUE[BISHOP];
+	eval += std::popcount(board.pieces(ROOK, WHITE)) * Constants::PIECE_VALUE[ROOK];
+	eval += std::popcount(board.pieces(QUEEN, WHITE)) * Constants::PIECE_VALUE[QUEEN];
 
-    eval -= std::popcount(board.pieces(PAWN, BLACK))   * Constants::PIECE_VALUE[PAWN];
-    eval -= std::popcount(board.pieces(KNIGHT, BLACK)) * Constants::PIECE_VALUE[KNIGHT];
-    eval -= std::popcount(board.pieces(BISHOP, BLACK)) * Constants::PIECE_VALUE[BISHOP];
-    eval -= std::popcount(board.pieces(ROOK, BLACK))   * Constants::PIECE_VALUE[ROOK];
-    eval -= std::popcount(board.pieces(QUEEN, BLACK))  * Constants::PIECE_VALUE[QUEEN];
+	eval -= std::popcount(board.pieces(PAWN, BLACK)) * Constants::PIECE_VALUE[PAWN];
+	eval -= std::popcount(board.pieces(KNIGHT, BLACK)) * Constants::PIECE_VALUE[KNIGHT];
+	eval -= std::popcount(board.pieces(BISHOP, BLACK)) * Constants::PIECE_VALUE[BISHOP];
+	eval -= std::popcount(board.pieces(ROOK, BLACK)) * Constants::PIECE_VALUE[ROOK];
+	eval -= std::popcount(board.pieces(QUEEN, BLACK)) * Constants::PIECE_VALUE[QUEEN];
 
-    int perspective = board.mover() == WHITE ? 1 : -1;
+	int perspective = board.mover() == WHITE ? 1 : -1;
 
-    return eval * perspective;
+	return eval * perspective;
 }
