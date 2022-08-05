@@ -402,6 +402,10 @@ Movelist movegen()
 
     // generate knight moves
     u64 knights = board.pieces(KNIGHT, c);
+
+	// a knight cannot move if it is pinned
+	knights &= ~pinned;
+
     while (knights)
     {
         Square from = bitscan(knights);
