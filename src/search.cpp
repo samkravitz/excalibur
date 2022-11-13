@@ -12,12 +12,18 @@
 
 #include <bit>
 #include <limits>
+#include <thread>
 
 #include "board.h"
 #include "constants.h"
 #include "move.h"
 #include "movegen.h"
 #include "util.h"
+
+std::tuple<Move, float> search_time_helper(std::function<float(int, float, float)>);
+
+Move best_move;
+float max;
 
 /**
  * @brief search a position for the best move using the negamax algorithm
@@ -107,6 +113,25 @@ std::tuple<Move, float> search(int depth, std::function<float(int, float, float)
 }
 
 /**
+ * @brief use an algorithm f to search positions
+ * f can either be negamax or alphabeta
+ * @param game_time length of the game in milliseconds
+ * @param our_time max time to search in milliseconds
+ * @return tuple of <best_move, evaluation>
+ */
+std::tuple<Move, float> search_time(int game_time, int our_time, std::function<float(int, float, float)> f)
+{
+	// search for 20% of our time or 1/60th of the game time, whichever is smaller
+	int time = std::min(our_time / 5, game_time / 60);
+
+	std::thread t(search_time_helper, f);
+	t.detach();
+	std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(time));
+
+	return std::make_tuple(best_move, max);
+}
+
+/**
  * @brief evaluate a position
  * @return the evaluation - it is relative to the player to move so a positive score is
  * winning for the player while a negative score is winning for the opponent
@@ -130,4 +155,30 @@ float evaluate()
 	int perspective = board.mover() == WHITE ? 1 : -1;
 
 	return eval * perspective;
+}
+
+std::tuple<Move, float> search_time_helper(std::function<float(int, float, float)> f)
+{
+	auto legal_moves = generate_moves();
+	float max = -std::numeric_limits<float>::infinity();
+	int depth = 1;
+
+	while (1)
+	{
+		for (const auto mv : legal_moves)
+		{
+			board.make_move(mv);
+			float score = -f(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+			board.undo_move(mv);
+
+			if (score > max)
+			{
+				max = score;
+				best_move = mv;
+			}
+		}
+
+		std::cerr << "current depth: " << depth << "\n";
+		depth += 1;
+	}
 }

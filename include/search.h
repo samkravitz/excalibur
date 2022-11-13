@@ -22,5 +22,6 @@ extern Board board;
 float alphabeta(int, float, float);
 float negamax(int, float, float);
 std::tuple<Move, float> search(int, std::function<float(int, float, float)> f = alphabeta);
+std::tuple<Move, float> search_time(int, int, std::function<float(int, float, float)> f = alphabeta);
 
 float evaluate();
