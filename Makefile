@@ -1,5 +1,6 @@
 CXX = g++
 CXXFLAGS = -g -O2 -std=c++2a -I $(INCLUDE)
+LIBS = -lpthread
 SOURCE = src
 INCLUDE = include
 OBJ = \
@@ -16,7 +17,7 @@ VPATH = $(SOURCE)
 
 all: excalibur
 excalibur: $(OBJ) main.cpp
-	$(CXX) $(CXXFLAGS) -o excalibur $(SOURCE)/main.cpp $(OBJ)
+	$(CXX) $(CXXFLAGS) -o excalibur $(SOURCE)/main.cpp $(OBJ) $(LIBS)
 
 %.o : %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
