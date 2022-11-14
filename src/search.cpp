@@ -20,34 +20,10 @@
 #include "movegen.h"
 #include "util.h"
 
-std::tuple<Move, float> search_time_helper(std::function<float(int, float, float)>);
+std::tuple<Move, float> search_time_helper();
 
 Move best_move;
-float max;
-
-/**
- * @brief search a position for the best move using the negamax algorithm
- * @param depth ply number of ply to search
- * @return evaluation
- */
-float negamax(int depth, float alpha, float beta)
-{
-	if (depth == 0)
-		return evaluate();
-
-	float max = -std::numeric_limits<float>::infinity();
-	auto legal_moves = generate_moves();
-	for (const auto mv : legal_moves)
-	{
-		board.make_move(mv);
-		float score = -negamax(depth - 1, 0, 0);
-		board.undo_move(mv);
-		if (score > max)
-			max = score;
-	}
-
-	return max;
-}
+float max = -std::numeric_limits<float>::infinity();
 
 /**
  * @brief search a position for the best move using the alpha-beta algorithm
@@ -87,20 +63,18 @@ float alphabeta(int depth, float alpha, float beta)
 
 /**
  * @brief use an algorithm f to search positions
- * f can either be negamax or alphabeta
  * @param depth number of ply into the future to search
  * @return tuple of <best_move, evaluation>
  */
-std::tuple<Move, float> search(int depth, std::function<float(int, float, float)> f)
+std::tuple<Move, float> search(int depth)
 {
-	Move best_move;
 	auto legal_moves = generate_moves();
-	float max = -std::numeric_limits<float>::infinity();
+	legal_moves.order();
 
 	for (const auto mv : legal_moves)
 	{
 		board.make_move(mv);
-		float score = -f(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+		float score = -alphabeta(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
 		board.undo_move(mv);
 
 		if (score > max)
@@ -114,18 +88,17 @@ std::tuple<Move, float> search(int depth, std::function<float(int, float, float)
 }
 
 /**
- * @brief use an algorithm f to search positions
- * f can either be negamax or alphabeta
+ * @brief search positions for a given amount of time
  * @param game_time length of the game in milliseconds
  * @param our_time max time to search in milliseconds
  * @return tuple of <best_move, evaluation>
  */
-std::tuple<Move, float> search_time(int game_time, int our_time, std::function<float(int, float, float)> f)
+std::tuple<Move, float> search_time(int game_time, int our_time)
 {
 	// search for 20% of our time or 1/60th of the game time, whichever is smaller
 	int time = std::min(our_time / 5, game_time / 60);
 
-	std::thread t(search_time_helper, f);
+	std::thread t(search_time_helper);
 	t.detach();
 	std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(time));
 
@@ -158,7 +131,7 @@ float evaluate()
 	return eval * perspective;
 }
 
-std::tuple<Move, float> search_time_helper(std::function<float(int, float, float)> f)
+std::tuple<Move, float> search_time_helper()
 {
 	auto legal_moves = generate_moves();
 	legal_moves.order();
@@ -171,7 +144,7 @@ std::tuple<Move, float> search_time_helper(std::function<float(int, float, float
 		for (const auto mv : legal_moves)
 		{
 			board.make_move(mv);
-			float score = -f(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+			float score = -alphabeta(depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
 			board.undo_move(mv);
 
 			if (score > max)
