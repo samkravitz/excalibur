@@ -87,8 +87,34 @@ static u64 enpassant(Board const &board)
 		return 0;
 
 	auto [rank, file] = Util::rank_file_from_square(ep_sq);
-	return random64[ENPASSANT_OFFSET + file];
 
+	Square pawn_square;
+
+	if (rank == RANK_3)
+		pawn_square = Util::square_from_rank_file(RANK_4, file);
+	else
+		pawn_square = Util::square_from_rank_file(RANK_5, file);
+
+
+	// moved pawn is not on A file
+	if (file != FILE_A)
+	{
+		Square one_left = static_cast<Square>(pawn_square - 1);
+
+		if (board.pieces(PAWN, board.mover()) & one_left)
+			return random64[ENPASSANT_OFFSET + file];
+	}
+
+	// moved pawn is not on H file
+	if (file != FILE_H)
+	{
+		Square one_right = static_cast<Square>(pawn_square + 1);
+
+		if (board.pieces(PAWN, board.mover()) & one_right)
+			return random64[ENPASSANT_OFFSET + file];
+	}
+
+	return 0;
 }
 
 static u64 turn(Board const &board)
