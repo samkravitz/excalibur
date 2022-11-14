@@ -54,7 +54,7 @@ Movelist movegen()
 
 	auto const &piece_on = [&](Square to) -> bool
 	{
-		return board.piece_on(to);
+		return board.piece_on(to) != NONE;
 	};
 
 	auto const &make_flags = [&](Square to) -> MoveFlags

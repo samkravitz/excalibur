@@ -57,7 +57,7 @@ float negamax(int depth, float alpha, float beta)
 float alphabeta(int depth, float alpha, float beta)
 {
 	if (depth == 0)
-		return evaluate();
+		return quiesce(alpha, beta);
 
 	auto legal_moves = generate_moves();
 	legal_moves.order();
@@ -184,4 +184,39 @@ std::tuple<Move, float> search_time_helper(std::function<float(int, float, float
 		std::cerr << "current depth: " << depth << "\n";
 		depth += 1;
 	}
+}
+
+/**
+ * @brief quiescence search - continue searching positions with no captures
+ * @param alpha alpha value from alpha-beta search
+ * @param beta alpha value from alpha-beta search
+ * @return evaluation
+ */
+float quiesce(float alpha, float beta)
+{
+	auto eval = evaluate();
+
+	if (eval >= beta)
+		return beta;
+
+	if (alpha < eval)
+		alpha = eval;
+
+	auto capture_moves = generate_captures();
+	capture_moves.order();
+
+	for (const auto mv : capture_moves)
+	{
+		board.make_move(mv);
+		float score = -quiesce(-beta, -alpha);
+		board.undo_move(mv);
+
+		if (score >= beta)
+			return beta;
+
+		if (score > alpha)
+			alpha = score;
+	}
+
+	return alpha;
 }
