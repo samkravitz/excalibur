@@ -60,6 +60,7 @@ float alphabeta(int depth, float alpha, float beta)
 		return evaluate();
 
 	auto legal_moves = generate_moves();
+	legal_moves.order();
 
 	for (const auto mv : legal_moves)
 	{
@@ -160,7 +161,9 @@ float evaluate()
 std::tuple<Move, float> search_time_helper(std::function<float(int, float, float)> f)
 {
 	auto legal_moves = generate_moves();
-	float max = -std::numeric_limits<float>::infinity();
+	legal_moves.order();
+
+	max = -std::numeric_limits<float>::infinity();
 	int depth = 1;
 
 	while (1)

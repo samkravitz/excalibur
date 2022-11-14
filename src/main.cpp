@@ -46,5 +46,6 @@ int main(int argc, char **argv)
 	const auto [move, eval] = search_time(game_time, time_left);
 
 	std::cout << move << "\n";
+	std::cerr << "evaluation: " << eval << "\n";
 	return 0;
 }

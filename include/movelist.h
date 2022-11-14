@@ -12,11 +12,8 @@
 #include <array>
 #include <cstddef>
 
+#include "board.h"
 #include "move.h"
-
-// global board object
-class Board;
-extern Board board;
 
 constexpr std::size_t N_MOVES = 256;
 
@@ -26,6 +23,8 @@ public:
 	Movelist();
 
 	void add(Move);
+	void order();
+
 	inline std::size_t size() const { return m_size; }
 	inline std::array<Move, N_MOVES>::const_iterator begin() const { return movelist.begin(); }
 	inline std::array<Move, N_MOVES>::const_iterator end()   const { return movelist.begin() + m_size; }
