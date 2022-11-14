@@ -14,6 +14,7 @@
 #include "game.h"
 #include "search.h"
 #include "uci.h"
+#include "polyglot.h"
 
 // global board object
 Board board;
@@ -41,6 +42,14 @@ int main(int argc, char **argv)
 
 		else
 			parse_uci_move(std::string(arg));
+	}
+
+	auto opening_move = polyglot(board);
+	if (!opening_move.is_empty())
+	{
+		std::cout << opening_move << "\n";
+		std::cerr << "opening move " << opening_move << "\n";
+		return 0;
 	}
 
 	const auto [move, eval] = search_time(game_time, time_left);

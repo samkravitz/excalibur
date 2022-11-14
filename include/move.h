@@ -36,6 +36,7 @@ public:
 	}
 
 	Move() { move_enc = 0; }
+	Move(int enc) : move_enc(enc) { }
 
 	Move(int from, int to) : Move(static_cast<Square>(from), static_cast<Square>(to)) { }
 
@@ -46,6 +47,9 @@ public:
 	inline bool is_castle()    const { return ((flags() == KINGSIDE_CASTLE) || (flags() == QUEENSIDE_CASTLE)); }
 	inline bool is_promotion() const { return move_enc >> 12 & 0x8; }
 	inline bool is_capture()   const { return flags() == ENPASSANT ? false : move_enc >> 12 & 0x4; }
+
+	// a1a1, a nonsense move
+	inline bool is_empty()     const { return move_enc == 0; }
 
 	friend std::ostream &operator<<(std::ostream &os, const Move &mv)
 	{

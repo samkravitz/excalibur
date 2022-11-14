@@ -9,6 +9,7 @@ OBJ = \
 	movegen.o \
 	movelist.o \
 	perft.o \
+	polyglot.o \
 	search.o \
 	uci.o \
 	util.o \
