@@ -12,6 +12,7 @@ OBJ = \
 	search.o \
 	uci.o \
 	util.o \
+	zobrist.o \
 
 VPATH = $(SOURCE)
 
